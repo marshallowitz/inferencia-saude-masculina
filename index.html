@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inferência em saúde masculina com base científica real</title>
+<meta name="description" content="Transforma dados clínicos em inferências epidemiológicas rastreáveis. Cada sugestão tem origem num estudo publicado. Cada peso tem uma referência. Nenhuma pseudo-confiança.">
+<meta property="og:title" content="Inferência em Saúde Masculina">
+<meta property="og:description" content="Engine de inferência clínica baseado em ciência. 16 modelos N1, 9 N2, 4 N3. Cada peso derivado da literatura publicada.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+:root{
+  --ink:#0f0e0c; --paper:#f8f6f0; --rule:#d8d4c8; --accent:#1d4ed8;
+  --muted:#8a8680; --n1:#1d4ed8; --n2:#6d28d9; --n3:#c2410c;
+  --teal:#0f766e; --red:#be123c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.7}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #2a2a28;padding:0 2rem}
+.nav-in{max-width:1140px;margin:0 auto;display:flex;align-items:center;height:52px}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#f8f6f0;letter-spacing:-.01em;margin-right:auto;text-decoration:none}
+.nav-logo em{color:#93c5fd;font-style:normal}
+.nav-links{display:flex}
+.nav-links a{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#888;text-decoration:none;padding:0 1.1rem;height:52px;display:flex;align-items:center;border-left:1px solid #2a2a28;transition:color .15s}
+.nav-links a:hover{color:#f8f6f0}
+.nav-links a.cta{color:#93c5fd}
+.nav-links a.cta:hover{color:#fff}
+
+/* HERO */
+.hero{max-width:1140px;margin:0 auto;padding:7rem 2rem 6rem;display:grid;grid-template-columns:1fr 400px;gap:6rem;align-items:center}
+@media(max-width:900px){.hero{grid-template-columns:1fr;gap:3rem;padding:4rem 2rem 3rem}}
+.hero-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem}
+.hero-eyebrow::before{content:'';display:block;width:28px;height:2px;background:var(--accent)}
+.hero-h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(36px,5vw,58px);line-height:1.0;letter-spacing:-.03em;margin-bottom:1.8rem}
+.hero-h1 em{font-style:italic;font-family:'Source Serif 4',serif;font-weight:300;color:var(--accent)}
+.hero-sub{font-size:17px;line-height:1.8;color:#444;max-width:540px;margin-bottom:2.5rem}
+.hero-sub strong{font-weight:600;color:var(--ink)}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap}
+.btn{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;padding:.85rem 1.8rem;border-radius:3px;transition:all .15s}
+.btn-primary{background:var(--ink);color:#f8f6f0}
+.btn-primary:hover{background:#1a1a18}
+.btn-secondary{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.btn-secondary:hover{background:var(--ink);color:#f8f6f0}
+.btn-arrow::after{content:'→';font-family:monospace;font-size:15px;margin-left:.2rem}
+
+/* Card hero */
+.hero-card{background:#fff;border:2px solid var(--ink);border-radius:4px;padding:2rem}
+.hc-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1.2rem}
+.hc-scenario{font-size:13px;color:#333;line-height:1.7;margin-bottom:1.4rem;padding-bottom:1.2rem;border-bottom:1px solid var(--rule)}
+.hc-scenario em{font-style:italic;color:var(--muted)}
+.hc-inference{margin-bottom:.6rem}
+.hc-inf-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.hc-inf-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem}
+.hc-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;padding:1px 7px;border-radius:2px;flex-shrink:0}
+.hc-n1{background:#dbeafe;color:var(--n1)}
+.hc-n2{background:#ede9fe;color:var(--n2)}
+.hc-n3{background:#ffedd5;color:var(--n3)}
+.hc-bar-wrap{flex:1;height:4px;background:var(--rule);border-radius:2px;overflow:hidden}
+.hc-bar{height:100%;border-radius:2px}
+.hc-pct{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap}
+.hc-name{font-size:12px;color:#333;flex:1}
+.hc-footnote{font-size:11px;color:var(--muted);font-style:italic;margin-top:1rem;line-height:1.5}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--rule)}
+
+/* STATS */
+.stats{max-width:1140px;margin:0 auto;padding:3.5rem 2rem;display:grid;grid-template-columns:repeat(5,1fr);gap:2rem}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}}
+.stat-n{font-family:'Syne',sans-serif;font-weight:800;font-size:40px;color:var(--ink);line-height:1;letter-spacing:-.02em}
+.stat-n sup{font-size:.5em;color:var(--accent)}
+.stat-l{font-size:12px;color:var(--muted);margin-top:.3rem;line-height:1.4;font-family:'Syne',sans-serif;letter-spacing:.02em}
+
+/* SEÇÃO ESCURA — problema */
+.dark{background:var(--ink);padding:5rem 2rem}
+.dark-in{max-width:1140px;margin:0 auto}
+.dark-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.dark-eyebrow::before{content:'';display:block;width:28px;height:2px;background:#555}
+.dark h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(26px,4vw,44px);color:#f8f6f0;letter-spacing:-.02em;margin-bottom:1rem;line-height:1.1}
+.dark h2 em{font-style:italic;font-family:'Source Serif 4',serif;font-weight:300;color:#93c5fd}
+.dark-sub{font-size:15px;color:#777;max-width:640px;margin-bottom:3.5rem;line-height:1.85}
+.dark-sub strong{color:#aaa;font-weight:600}
+.dark-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem}
+@media(max-width:700px){.dark-grid{grid-template-columns:1fr}}
+.dark-card{border-top:2px solid #2a2a28;padding-top:1.5rem}
+.dark-card-n{font-family:'Syne',sans-serif;font-weight:800;font-size:36px;color:#2a2a28;line-height:1;margin-bottom:.8rem}
+.dark-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#f8f6f0;margin-bottom:.6rem}
+.dark-card p{font-size:13px;color:#777;line-height:1.75}
+.dark-card strong{color:#aaa;font-weight:600}
+
+/* COMO FUNCIONA — cadeia */
+.chain-section{max-width:1140px;margin:0 auto;padding:5.5rem 2rem}
+.chain-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.chain-eyebrow::before{content:'';display:block;width:28px;height:2px;background:var(--accent)}
+.chain-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,3.5vw,40px);letter-spacing:-.02em;margin-bottom:.8rem}
+.chain-sub{font-size:15px;color:var(--muted);max-width:560px;margin-bottom:3.5rem;line-height:1.8}
+.chain-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+@media(max-width:800px){.chain-steps{grid-template-columns:1fr 1fr;gap:2rem}}
+@media(max-width:500px){.chain-steps{grid-template-columns:1fr}}
+.chain-step{padding:0 1.5rem 0 0;position:relative}
+.chain-step::after{content:'→';position:absolute;right:-4px;top:12px;font-size:22px;color:var(--rule);font-family:monospace}
+.chain-step:last-child::after{display:none}
+@media(max-width:800px){.chain-step::after{display:none}}
+.cs-badge{display:inline-block;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:2px;margin-bottom:.8rem}
+.cs-d{background:#f0f0f0;color:var(--muted)}
+.cs-n1{background:#dbeafe;color:var(--n1)}
+.cs-n2{background:#ede9fe;color:var(--n2)}
+.cs-n3{background:#ffedd5;color:var(--n3)}
+.chain-step h3{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:.5rem}
+.chain-step p{font-size:13px;color:#555;line-height:1.7}
+.chain-step .cs-example{display:block;margin-top:.6rem;font-size:12px;color:var(--muted);font-style:italic;font-family:'Source Serif 4',serif}
+
+/* PARA QUEM */
+.audience{background:#f0f0ea;padding:5rem 2rem}
+.audience-in{max-width:1140px;margin:0 auto}
+.audience-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--n2);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.audience-eyebrow::before{content:'';display:block;width:28px;height:2px;background:var(--n2)}
+.audience-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,3.5vw,40px);letter-spacing:-.02em;margin-bottom:.8rem}
+.audience-sub{font-size:15px;color:var(--muted);max-width:540px;margin-bottom:3rem;line-height:1.8}
+.audience-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem}
+@media(max-width:800px){.audience-grid{grid-template-columns:1fr}}
+.aud-card{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.8rem}
+.aud-who{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--n2);margin-bottom:.3rem}
+.aud-role{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:1rem;color:var(--ink)}
+.aud-list{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.aud-list li{font-size:13px;color:#444;line-height:1.6;display:flex;gap:.6rem}
+.aud-list li::before{content:'→';font-family:monospace;color:var(--accent);flex-shrink:0;margin-top:1px}
+
+/* CONTRASTE — por que dados + ciência */
+.contrast{max-width:1140px;margin:0 auto;padding:5rem 2rem}
+.contrast-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--n3);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.contrast-eyebrow::before{content:'';display:block;width:28px;height:2px;background:var(--n3)}
+.contrast-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,3.5vw,40px);letter-spacing:-.02em;margin-bottom:.8rem}
+.contrast-sub{font-size:15px;color:var(--muted);max-width:540px;margin-bottom:3rem;line-height:1.8}
+.contrast-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:640px){.contrast-cols{grid-template-columns:1fr}}
+.cc{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.8rem}
+.cc.bad{border-top:3px solid #dc2626}
+.cc.good{border-top:3px solid var(--accent)}
+.cc-head{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:1.2rem}
+.cc.bad .cc-head{color:#dc2626}
+.cc.good .cc-head{color:var(--accent)}
+.cc-item{display:flex;gap:.7rem;font-size:13px;color:#555;margin-bottom:.7rem;line-height:1.55}
+.cc.bad .cc-item::before{content:'✗';color:#dc2626;font-weight:700;flex-shrink:0;margin-top:1px}
+.cc.good .cc-item::before{content:'✓';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* GRAFO INLINE */
+.grafo-section{background:var(--ink);padding:5rem 2rem}
+.grafo-in{max-width:1140px;margin:0 auto}
+.grafo-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.grafo-eyebrow::before{content:'';display:block;width:28px;height:2px;background:#555}
+.grafo-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,3vw,36px);color:#f8f6f0;letter-spacing:-.02em;margin-bottom:.6rem}
+.grafo-sub{font-size:14px;color:#666;max-width:600px;margin-bottom:2rem;line-height:1.8}
+.grafo-wrap{background:#fff;border:1px solid #2a2a28;border-radius:6px;overflow:hidden}
+.grafo-legend{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.8rem}
+.gl-item{display:flex;align-items:center;gap:.4rem;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#666}
+.gl-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+
+/* EXEMPLO PRÁTICO */
+.example{max-width:1140px;margin:0 auto;padding:5.5rem 2rem}
+.example-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.example-eyebrow::before{content:'';display:block;width:28px;height:2px;background:var(--teal)}
+.example-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,3.5vw,40px);letter-spacing:-.02em;margin-bottom:.8rem}
+.example-sub{font-size:15px;color:var(--muted);max-width:560px;margin-bottom:3rem;line-height:1.8}
+.example-flow{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+@media(max-width:700px){.example-flow{grid-template-columns:1fr}}
+.ef-left{}
+.ef-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.ef-data-list{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.5rem}
+.ef-datum{display:flex;align-items:center;gap:.7rem;padding:.5rem .7rem;background:#fff;border:1px solid var(--rule);border-radius:3px;font-size:13px}
+.ef-datum-name{flex:1;color:var(--ink);font-weight:500}
+.ef-datum-val{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;padding:1px 7px;border-radius:2px}
+.val-risk{background:#ffe4e6;color:var(--red)}
+.val-norm{background:#f1f5f9;color:#475569}
+.ef-right{}
+.ef-inf-list{display:flex;flex-direction:column;gap:.8rem}
+.ef-inf{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1rem 1.1rem;border-left:3px solid}
+.ef-inf.n1{border-left-color:var(--n1)}
+.ef-inf.n2{border-left-color:var(--n2)}
+.ef-inf.n3{border-left-color:var(--n3)}
+.ef-inf-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+.ef-inf-badge{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:2px}
+.ef-inf-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;flex:1}
+.ef-inf-pct{font-family:'Syne',sans-serif;font-weight:800;font-size:14px}
+.ef-inf-bar{height:4px;background:var(--rule);border-radius:2px;overflow:hidden;margin-bottom:.4rem}
+.ef-inf-fill{height:100%;border-radius:2px}
+.ef-inf-desc{font-size:12px;color:#555;line-height:1.6}
+.ef-action{background:#fff;border:1.5px solid var(--teal);border-radius:4px;padding:1rem 1.1rem;margin-top:.5rem}
+.ef-action-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:.4rem}
+.ef-action p{font-size:12px;color:#334155;line-height:1.6}
+
+/* CTA FINAL */
+.cta-final{background:var(--ink);padding:6rem 2rem}
+.cta-final-in{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:4rem;align-items:center}
+@media(max-width:700px){.cta-final-in{grid-template-columns:1fr;gap:2rem}}
+.cta-final h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(28px,4vw,48px);color:#f8f6f0;letter-spacing:-.02em;line-height:1.05;margin-bottom:1rem}
+.cta-final h2 em{font-style:italic;font-family:'Source Serif 4',serif;font-weight:300;color:#93c5fd}
+.cta-final p{font-size:15px;color:#666;max-width:500px;line-height:1.8}
+.cta-final-btns{display:flex;flex-direction:column;gap:1rem;align-items:flex-end}
+@media(max-width:700px){.cta-final-btns{align-items:flex-start}}
+.btn-inv{background:transparent;color:#f8f6f0;border:2px solid #3a3a38}
+.btn-inv:hover{border-color:#f8f6f0}
+
+/* FOOTER */
+footer{background:#0a0908;padding:2.5rem 2rem;border-top:1px solid #1a1a18}
+.footer-in{max-width:1140px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#f8f6f0}
+.footer-logo em{color:#93c5fd;font-style:normal}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#444;text-decoration:none;transition:color .12s}
+.footer-links a:hover{color:#888}
+.footer-copy{font-size:11px;color:#333;font-family:'Syne',sans-serif;letter-spacing:.03em;width:100%;margin-top:.5rem}
+</style>
+</head>
+<body>
+
+<div id="read-progress"></div>
+
+<!-- HERO -->
+<section>
+  <div class="hero fade-up">
+    <div>
+      <div class="hero-eyebrow">Engine de Inferência · Saúde Masculina v1</div>
+      <h1 class="hero-h1">O paciente tem dados.<br>Os dados têm<br><em>o que dizer.</em></h1>
+      <p class="hero-sub">Transformamos exames, escalas clínicas e histórico em inferências epidemiológicas rastreáveis. Cada resultado ligado a um estudo publicado, cada peso derivado da literatura. <strong>Não é IA de caixa preta. É ciência com origem declarada.</strong></p>
+      <div class="hero-actions">
+        <a href="/app" class="btn btn-primary btn-arrow">Acessar o app</a>
+        <a href="saude_engine_v3.html" class="btn btn-secondary">Explorar o engine</a>
+      </div>
+    </div>
+
+    <!-- Card de exemplo ao vivo -->
+    <div>
+      <div class="hero-card">
+        <div class="hc-label">Exemplo — dados de uma consulta</div>
+        <div class="hc-scenario">
+          Homem, 47 anos. IMC 32, circunferência 101cm, glicemia 118 mg/dL, HbA1c 6,1%, triglicerídeos 188, HDL 38. PHQ-9 = 8. Apneia suspeita. PSA 3,2 ng/mL.
+          <em style="display:block;margin-top:.4rem">→ 9 dados informados. O engine propaga.</em>
+        </div>
+        <div class="hc-inference">
+          <div class="hc-inf-label">Inferências ativadas</div>
+          <div class="hc-inf-row">
+            <span class="hc-badge hc-n1">N1</span>
+            <span class="hc-name">Síndrome metabólica</span>
+            <div class="hc-bar-wrap"><div class="hc-bar" style="width:88%;background:#1d4ed8"></div></div>
+            <span class="hc-pct">88%</span>
+          </div>
+          <div class="hc-inf-row">
+            <span class="hc-badge hc-n1">N1</span>
+            <span class="hc-name">Risco DM2 (FINDRISC)</span>
+            <div class="hc-bar-wrap"><div class="hc-bar" style="width:74%;background:#1d4ed8"></div></div>
+            <span class="hc-pct">74%</span>
+          </div>
+          <div class="hc-inf-row">
+            <span class="hc-badge hc-n1">N1</span>
+            <span class="hc-name">Triagem depressão (PHQ-9)</span>
+            <div class="hc-bar-wrap"><div class="hc-bar" style="width:68%;background:#0f766e"></div></div>
+            <span class="hc-pct">68%</span>
+          </div>
+          <div class="hc-inf-row">
+            <span class="hc-badge hc-n2">N2</span>
+            <span class="hc-name">Risco cardiometabólico integrado</span>
+            <div class="hc-bar-wrap"><div class="hc-bar" style="width:79%;background:#6d28d9"></div></div>
+            <span class="hc-pct">79%</span>
+          </div>
+          <div class="hc-inf-row">
+            <span class="hc-badge hc-n2">N2</span>
+            <span class="hc-name">Saúde mental e emagrecimento</span>
+            <div class="hc-bar-wrap"><div class="hc-bar" style="width:61%;background:#6d28d9"></div></div>
+            <span class="hc-pct">61%</span>
+          </div>
+          <div class="hc-inf-row">
+            <span class="hc-badge hc-n3">N3</span>
+            <span class="hc-name">Perfil de saúde masculina 360°</span>
+            <div class="hc-bar-wrap"><div class="hc-bar" style="width:71%;background:#c2410c"></div></div>
+            <span class="hc-pct">71%</span>
+          </div>
+        </div>
+        <p class="hc-footnote">Cada percentual = fração das variáveis do estudo de referência presente no schema, ponderada pelo resultado clínico. Não é probabilidade de doença.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STATS -->
+<section>
+  <div class="stats fade-up">
+    <div>
+      <div class="stat-n">16</div>
+      <div class="stat-l">modelos N1 — instrumentos clínicos individuais validados</div>
+    </div>
+    <div>
+      <div class="stat-n">9</div>
+      <div class="stat-l">modelos N2 — padrões compostos emergindo dos dados</div>
+    </div>
+    <div>
+      <div class="stat-n">4</div>
+      <div class="stat-l">modelos N3 — meta-inferências para plano terapêutico</div>
+    </div>
+    <div>
+      <div class="stat-n">250<sup>+</sup></div>
+      <div class="stat-l">estados clínicos com faixas de α derivadas da literatura</div>
+    </div>
+    <div>
+      <div class="stat-n">50<sup>+</sup></div>
+      <div class="stat-l">referências científicas documentadas e rastreáveis</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- POR QUE ISSO IMPORTA -->
+<section class="dark">
+  <div class="dark-in">
+    <div class="dark-eyebrow">O problema</div>
+    <h2>Cuidar bem exige saber<br><em>o que os dados revelam</em></h2>
+    <p class="dark-sub">Um homem de 47 anos com IMC 32, glicemia de jejum de 110 e PHQ-9 de 9 está na sala de espera. <strong>O que você sabe sobre ele?</strong> Esses três dados, sozinhos, já cobrem mais de 60% do poder inferencial do FINDRISC, do Framingham e do modelo de cobertura PHQ. Mas sem um engine que mapeie isso sistematicamente, essa informação fica invisível, e a janela de intervenção preventiva passa.</p>
+    <div class="dark-grid">
+      <div class="dark-card fade-up">
+        <div class="dark-card-n">01</div>
+        <h3>Dados existem. A inferência não é automática.</h3>
+        <p>Exames, escalas e histórico acumulam em prontuário sem ativarem os modelos epidemiológicos que justificam intervenção. O médico precisa de um mapa, não de mais dados.</p>
+      </div>
+      <div class="dark-card fade-up delay-2">
+        <div class="dark-card-n">02</div>
+        <h3>Prevenção chegando tarde custa mais do que uma assinatura.</h3>
+        <p>O custo de uma crise hipertensiva, um diagnóstico tardio de pré-diabetes ou uma depressão não tratada é <strong>ordens de magnitude maior</strong> do que o custo de uma intervenção precoce baseada em dados que já existem.</p>
+      </div>
+      <div class="dark-card fade-up delay-4">
+        <div class="dark-card-n">03</div>
+        <h3>Oferta sem base científica é ruído. Ou pior: achismo.</h3>
+        <p>Recomendar um produto porque "o algoritmo achou" sem saber <em>por que</em> erode confiança. Recomendar com uma referência publicada, tal como "seu perfil metabólico indica risco DM2 segundo o FINDRISC; veja o que isso significa" é uma oferta que serve o paciente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA A CADEIA -->
+<section class="chain-section" id="como-funciona">
+  <div class="chain-eyebrow">Como funciona</div>
+  <h2 class="chain-h2">Da consulta ao plano de ação em quatro camadas</h2>
+  <p class="chain-sub">Os dados brutos do paciente alimentam modelos N1. N1 se combinam em N2. N2 em N3. Cada seta é uma relação documentada. Cada percentual tem origem declarada.</p>
+
+  <div class="chain-steps">
+    <div class="chain-step">
+      <span class="cs-badge cs-d">Dados</span>
+      <h3>Resultado clínico informado</h3>
+      <p>O médico informa não só que o dado existe, mas em qual faixa ele está: normal, risco moderado, risco alto. Cada faixa tem um α derivado dos pontos de corte do estudo original.</p>
+      <span class="cs-example">IMC 32 → α = 1,0 (obeso grau I, ABESO 2022)</span>
+    </div>
+    <div class="chain-step">
+      <span class="cs-badge cs-n1">N1</span>
+      <h3>Inferências primárias</h3>
+      <p>Cada N1 é um instrumento validado com um modelo médico real aplicável, tais como Framingham, FINDRISC, PHQ-9, LiFeCRC, PSA nomograma, ISI. A cobertura é a fração ponderada pelo α de cada variável.</p>
+      <span class="cs-example">Risco DM2 (FINDRISC): 74% de cobertura</span>
+    </div>
+    <div class="chain-step">
+      <span class="cs-badge cs-n2">N2</span>
+      <h3>Padrões compostos</h3>
+      <p>Múltiplos N1 se combinam em padrões que não aparecem em nenhum instrumento isolado: risco cardiometabólico integrado, saúde mental + peso, CRC integrado.</p>
+      <span class="cs-example">Síndrome metabólica integrada: 79% (Framingham + FINDRISC + SM)</span>
+    </div>
+    <div class="chain-step">
+      <span class="cs-badge cs-n3">N3</span>
+      <h3>Plano terapêutico</h3>
+      <p>Quatro N3 sintetizam tudo: perfil 360°, risco oncológico integrado, carga de doença mental-metabólica, e viabilidade terapêutica global, com sugestões baseadas em Look AHEAD e STEP 1.</p>
+      <span class="cs-example">Perfil 360°: 71% — plano de cuidado integrado viável</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- PARA QUEM -->
+<section class="audience" id="para-quem">
+  <div class="audience-in">
+    <div class="audience-eyebrow">Para quem</div>
+    <h2 class="audience-h2">Três papéis. Uma infraestrutura.</h2>
+    <p class="audience-sub">O engine serve simultaneamente ao produto, ao médico e ao paciente porque o mesmo dado clínico tem implicações em cada camada.</p>
+    <div class="audience-grid">
+
+      <div class="aud-card">
+        <div class="aud-who">Produto / Startup</div>
+        <div class="aud-role">Ofertas que fazem sentido</div>
+        <ul class="aud-list">
+          <li>Saiba exatamente o motivo para recomendar um protocolo, suplemento ou serviço, com o estudo que sustenta.</li>
+          <li>Segmentação por perfil clínico real, não por proxy demográfico arbitrário.</li>
+          <li>Aumente conversão porque a oferta chega com contexto e propósito, não como anúncio.</li>
+          <li>Construa confiança duradoura: o usuário vê que você entende o estado de saúde dele, não que você quer vender.</li>
+          <li>Conformidade LGPD/CFM embutida: o engine é explícito sobre o que é triagem e o que não é diagnóstico.</li>
+        </ul>
+      </div>
+
+      <div class="aud-card">
+        <div class="aud-who">Médico / Clínico</div>
+        <div class="aud-role">Decisões melhores com os dados que já tem</div>
+        <ul class="aud-list">
+          <li>Veja, em tempo real, quais modelos epidemiológicos o schema de dados do paciente já cobre.</li>
+          <li>Identifique dados faltantes com maior poder inferencial e descubra onde vale pedir mais exames.</li>
+          <li>Sugestões clínicas rastreáveis: cada card mostra referência, performance reportada e caveat.</li>
+          <li>Detecte interações não óbvias: como depressão + obesidade + sono se combinam num modelo de risco maior do que qualquer um isolado.</li>
+          <li>Painel duplo médico/paciente: linguagem diferente para cada interlocutor, derivada do mesmo dado.</li>
+        </ul>
+      </div>
+
+      <div class="aud-card">
+        <div class="aud-who">Paciente</div>
+        <div class="aud-role">Cuidado que ele consegue entender</div>
+        <ul class="aud-list">
+          <li>Recebe a informação na linguagem certa — não jargão médico, não simplificação vazia.</li>
+          <li>Entende a razão de uma recomendação feita, não apenas o que fazer.</li>
+          <li>Vê o próprio perfil de saúde como um sistema, como metabolismo, sono, mente e risco oncológico conectados.</li>
+          <li>Maior adesão: pacientes que entendem o contexto científico aderem mais ao tratamento (Look AHEAD, n=5.145).</li>
+          <li>Percebe que a oferta de produto emerge do cuidado, não o inverso.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- GRAFO INLINE -->
+<section class="grafo-section">
+  <div class="grafo-in">
+    <div class="grafo-eyebrow">Visualização</div>
+    <h2 class="grafo-h2">A rede de inferência — ao vivo</h2>
+    <p class="grafo-sub">Cada dado alimenta modelos N1. N1 se combinam em N2. N2 em N3. Clique em qualquer nó no grafo completo para ver a cadeia que ele ativa.</p>
+    <div class="grafo-wrap">
+      <svg width="100%" viewBox="0 0 820 460" xmlns="http://www.w3.org/2000/svg" style="display:block">
+        <defs>
+          <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#b8ccf0" stroke-width="1.5" stroke-linecap="round"/>
+          </marker>
+          <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linecap="round"/>
+          </marker>
+          <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#fed7aa" stroke-width="1.5" stroke-linecap="round"/>
+          </marker>
+        </defs>
+        <!-- Headers -->
+        <text font-family="Syne,sans-serif" font-size="9" font-weight="700" letter-spacing="1.5" fill="#8a8680" x="80"  y="22" text-anchor="middle">DADOS</text>
+        <text font-family="Syne,sans-serif" font-size="9" font-weight="700" letter-spacing="1.5" fill="#8a8680" x="265" y="22" text-anchor="middle">N1 — PRIMÁRIAS</text>
+        <text font-family="Syne,sans-serif" font-size="9" font-weight="700" letter-spacing="1.5" fill="#8a8680" x="520" y="22" text-anchor="middle">N2 — COMPOSTAS</text>
+        <text font-family="Syne,sans-serif" font-size="9" font-weight="700" letter-spacing="1.5" fill="#8a8680" x="730" y="22" text-anchor="middle">N3 — META</text>
+        <!-- Separadores -->
+        <line x1="168" y1="32" x2="168" y2="445" stroke="#d8d4c8" stroke-width="0.4" stroke-dasharray="3 7"/>
+        <line x1="406" y1="32" x2="406" y2="445" stroke="#d8d4c8" stroke-width="0.4" stroke-dasharray="3 7"/>
+        <line x1="636" y1="32" x2="636" y2="445" stroke="#d8d4c8" stroke-width="0.4" stroke-dasharray="3 7"/>
+        <!-- Arestas dados→N1 -->
+        <path d="M128,58 C148,58 148,80 184,80"    fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,88 C148,88 148,80 184,80"    fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,118 C148,118 148,80 184,80"  fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,58 C148,58 148,140 184,140"  fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,88 C148,88 148,140 184,140"  fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,118 C148,118 148,200 184,200" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,148 C148,148 148,200 184,200" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,178 C148,178 148,260 184,260" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,208 C148,208 148,260 184,260" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,238 C148,238 148,320 184,320" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,268 C148,268 148,320 184,320" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,298 C148,298 148,380 184,380" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <path d="M128,328 C148,328 148,380 184,380" fill="none" stroke="#b8ccf0" stroke-width=".7" marker-end="url(#ab)"/>
+        <!-- Arestas N1→N2 -->
+        <path d="M346,80  C376,80  376,120 422,120" fill="none" stroke="#c4b5fd" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,140 C376,140 376,120 422,120" fill="none" stroke="#c4b5fd" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,200 C376,200 376,120 422,120" fill="none" stroke="#c4b5fd" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,80  C376,80  376,190 422,190" fill="none" stroke="#c4b5fd" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,200 C376,200 376,190 422,190" fill="none" stroke="#c4b5fd" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,260 C376,260 376,260 422,260" fill="none" stroke="#5dcaa5" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,320 C376,320 376,260 422,260" fill="none" stroke="#5dcaa5" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,80  C376,80  376,330 422,330" fill="none" stroke="#f87171" stroke-width=".9" marker-end="url(#a2)"/>
+        <path d="M346,380 C376,380 376,330 422,330" fill="none" stroke="#f87171" stroke-width=".9" marker-end="url(#a2)"/>
+        <!-- Arestas N2→N3 -->
+        <path d="M618,120 C648,120 648,140 654,140" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <path d="M618,190 C648,190 648,140 654,140" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <path d="M618,260 C648,260 648,140 654,140" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <path d="M618,120 C648,120 648,290 654,290" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <path d="M618,330 C648,330 648,290 654,290" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <path d="M618,190 C648,190 648,370 654,370" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <path d="M618,260 C648,260 648,370 654,370" fill="none" stroke="#fed7aa" stroke-width="1.1" marker-end="url(#a3)"/>
+        <!-- Dados brutos -->
+        <rect x="28" y="44"  width="100" height="24" rx="3" fill="#f0f4ff" stroke="#6b7dd8" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#1e3a8a" x="78" y="61"  text-anchor="middle">IMC · Cintura</text>
+        <rect x="28" y="74"  width="100" height="24" rx="3" fill="#f0f4ff" stroke="#6b7dd8" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#1e3a8a" x="78" y="91"  text-anchor="middle">Glicemia · HbA1c</text>
+        <rect x="28" y="104" width="100" height="24" rx="3" fill="#f0f4ff" stroke="#6b7dd8" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#1e3a8a" x="78" y="121" text-anchor="middle">Pressão · Colest.</text>
+        <rect x="28" y="134" width="100" height="24" rx="3" fill="#f0f4ff" stroke="#6b7dd8" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#1e3a8a" x="78" y="151" text-anchor="middle">Insulina · PCR</text>
+        <rect x="28" y="164" width="100" height="24" rx="3" fill="#e1f5ee" stroke="#0f766e" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#064030" x="78" y="181" text-anchor="middle">PHQ-9 · GAD-7</text>
+        <rect x="28" y="194" width="100" height="24" rx="3" fill="#e1f5ee" stroke="#0f766e" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#064030" x="78" y="211" text-anchor="middle">ISI sono · HRV</text>
+        <rect x="28" y="224" width="100" height="24" rx="3" fill="#fff1f2" stroke="#be123c" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#7f1d1d" x="78" y="241" text-anchor="middle">PSA · DRE</text>
+        <rect x="28" y="254" width="100" height="24" rx="3" fill="#fff1f2" stroke="#be123c" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#7f1d1d" x="78" y="271" text-anchor="middle">Hist. fam. CRC</text>
+        <rect x="28" y="284" width="100" height="24" rx="3" fill="#fff1f2" stroke="#be123c" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#7f1d1d" x="78" y="301" text-anchor="middle">Alcool · Tabag.</text>
+        <rect x="28" y="314" width="100" height="24" rx="3" fill="#fef3c7" stroke="#b45309" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#78350f" x="78" y="331" text-anchor="middle">Gastroparesia</text>
+        <rect x="28" y="344" width="100" height="24" rx="3" fill="#fef3c7" stroke="#b45309" stroke-width=".8"/><text font-family="Syne,sans-serif" font-size="11" font-weight="600" fill="#78350f" x="78" y="361" text-anchor="middle">Hist. GLP-1</text>
+        <!-- N1 -->
+        <rect x="184" y="62"  width="162" height="36" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1"/><text font-family="Syne,sans-serif" font-size="11.5" font-weight="700" fill="#1e3a8a" x="265" y="76"  text-anchor="middle">Obesidade</text><text font-family="Syne,sans-serif" font-size="9" fill="#1d4ed8" x="265" y="91"  text-anchor="middle">ABESO 2022 · IDF 2006</text>
+        <rect x="184" y="122" width="162" height="36" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1"/><text font-family="Syne,sans-serif" font-size="11.5" font-weight="700" fill="#1e3a8a" x="265" y="136" text-anchor="middle">Risco DM2 (FINDRISC)</text><text font-family="Syne,sans-serif" font-size="9" fill="#1d4ed8" x="265" y="151" text-anchor="middle">Lindström 2003 · AUC=0,76</text>
+        <rect x="184" y="182" width="162" height="36" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/><text font-family="Syne,sans-serif" font-size="11.5" font-weight="700" fill="#7f1d1d" x="265" y="196" text-anchor="middle">Risco CV (Framingham)</text><text font-family="Syne,sans-serif" font-size="9" fill="#dc2626" x="265" y="211" text-anchor="middle">D'Agostino 2008 · AUC=0,794</text>
+        <rect x="184" y="242" width="162" height="36" rx="5" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/><text font-family="Syne,sans-serif" font-size="11.5" font-weight="700" fill="#064030" x="265" y="256" text-anchor="middle">Triagem depressão PHQ-9</text><text font-family="Syne,sans-serif" font-size="9" fill="#0f766e" x="265" y="271" text-anchor="middle">Kroenke 2003 · Sens 83%</text>
+        <rect x="184" y="302" width="162" height="36" rx="5" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/><text font-family="Syne,sans-serif" font-size="11.5" font-weight="700" fill="#064030" x="265" y="316" text-anchor="middle">Qualidade sono (ISI)</text><text font-family="Syne,sans-serif" font-size="9" fill="#0f766e" x="265" y="331" text-anchor="middle">Morin 2011 · AUC=0,87</text>
+        <rect x="184" y="362" width="162" height="36" rx="5" fill="#ffe4e6" stroke="#be123c" stroke-width="1"/><text font-family="Syne,sans-serif" font-size="11.5" font-weight="700" fill="#7f1d1d" x="265" y="376" text-anchor="middle">Risco CRC (LiFeCRC)</text><text font-family="Syne,sans-serif" font-size="9" fill="#be123c" x="265" y="391" text-anchor="middle">Kurth 2007 · OR=15,29</text>
+        <!-- N2 -->
+        <rect x="422" y="100" width="196" height="40" rx="7" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.2"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#3b0764" x="520" y="116" text-anchor="middle">Síndrome metabólica</text><text font-family="Syne,sans-serif" font-size="9.5" fill="#6d28d9" x="520" y="132" text-anchor="middle">integrada · AUC=0,82</text>
+        <rect x="422" y="170" width="196" height="40" rx="7" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.2"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#3b0764" x="520" y="186" text-anchor="middle">Risco cardiometabólico</text><text font-family="Syne,sans-serif" font-size="9.5" fill="#6d28d9" x="520" y="202" text-anchor="middle">integrado · AUC=0,78–0,84</text>
+        <rect x="422" y="240" width="196" height="40" rx="7" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.2"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#064030" x="520" y="256" text-anchor="middle">Saúde mental e</text><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#064030" x="520" y="270" text-anchor="middle">emagrecimento</text>
+        <rect x="422" y="312" width="196" height="40" rx="7" fill="#ffe4e6" stroke="#be123c" stroke-width="1.2"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7f1d1d" x="520" y="328" text-anchor="middle">Obesidade metabólica</text><text font-family="Syne,sans-serif" font-size="9.5" fill="#be123c" x="520" y="344" text-anchor="middle">e risco oncológico · SRR=1,42</text>
+        <!-- N3 -->
+        <rect x="654" y="112" width="142" height="56" rx="9" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7c2d12" x="725" y="134" text-anchor="middle">Perfil de saúde</text><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7c2d12" x="725" y="150" text-anchor="middle">masculina 360°</text><text font-family="Syne,sans-serif" font-size="8.5" fill="#c2410c" x="725" y="163" text-anchor="middle">WHO NCD 2030</text>
+        <rect x="654" y="262" width="142" height="56" rx="9" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7c2d12" x="725" y="284" text-anchor="middle">Risco oncológico</text><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7c2d12" x="725" y="300" text-anchor="middle">integrado</text><text font-family="Syne,sans-serif" font-size="8.5" fill="#c2410c" x="725" y="313" text-anchor="middle">IARC 2020 · NCI 2024</text>
+        <rect x="654" y="348" width="142" height="56" rx="9" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7c2d12" x="725" y="370" text-anchor="middle">Viabilidade</text><text font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7c2d12" x="725" y="386" text-anchor="middle">terapêutica global</text><text font-family="Syne,sans-serif" font-size="8.5" fill="#c2410c" x="725" y="399" text-anchor="middle">Look AHEAD NEJM 2012</text>
+      </svg>
+    </div>
+    <div class="grafo-legend">
+      <div class="gl-item"><div class="gl-dot" style="background:#f0f4ff;border:1.5px solid #6b7dd8"></div>Dado</div>
+      <div class="gl-item"><div class="gl-dot" style="background:#dbeafe;border:1.5px solid #1d4ed8"></div>N1 Metabólico</div>
+      <div class="gl-item"><div class="gl-dot" style="background:#fee2e2;border:1.5px solid #dc2626"></div>N1 Cardiovascular</div>
+      <div class="gl-item"><div class="gl-dot" style="background:#ccfbf1;border:1.5px solid #0f766e"></div>N1 Saúde mental</div>
+      <div class="gl-item"><div class="gl-dot" style="background:#ffe4e6;border:1.5px solid #be123c"></div>N1 Oncológico</div>
+      <div class="gl-item"><div class="gl-dot" style="background:#ede9fe;border:1.5px solid #6d28d9"></div>N2 Composto</div>
+      <div class="gl-item"><div class="gl-dot" style="background:#ffedd5;border:1.5px solid #c2410c"></div>N3 Meta-inferência</div>
+    </div>
+    <p style="margin-top:1.5rem"><a href="grafo_saude_v2.html" style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#93c5fd;text-decoration:none">→ Ver grafo interativo completo (29 nós · 80+ conexões)</a></p>
+  </div>
+</section>
+
+<!-- EXEMPLO PRÁTICO — o que o médico vê -->
+<section class="example">
+  <div class="example-eyebrow">Exemplo prático</div>
+  <h2 class="example-h2">Do exame à ação em uma consulta</h2>
+  <p class="example-sub">O que acontece quando seis dados de rotina entram no engine. Cada inferência ativada tem sugestão para o médico e linguagem para o paciente.</p>
+
+  <div class="example-flow">
+    <div class="ef-left">
+      <div class="ef-label">Dados informados (6)</div>
+      <div class="ef-data-list">
+        <div class="ef-datum">
+          <span class="ef-datum-name">IMC</span>
+          <span class="ef-datum-val val-risk">33,2 — obeso I</span>
+        </div>
+        <div class="ef-datum">
+          <span class="ef-datum-name">Glicemia em jejum</span>
+          <span class="ef-datum-val val-risk">112 mg/dL — pré-DM</span>
+        </div>
+        <div class="ef-datum">
+          <span class="ef-datum-name">HDL</span>
+          <span class="ef-datum-val val-risk">38 mg/dL — risco SM</span>
+        </div>
+        <div class="ef-datum">
+          <span class="ef-datum-name">PHQ-9</span>
+          <span class="ef-datum-val val-risk">8 — leve</span>
+        </div>
+        <div class="ef-datum">
+          <span class="ef-datum-name">Sono (ISI)</span>
+          <span class="ef-datum-val val-risk">14 — subclínica</span>
+        </div>
+        <div class="ef-datum">
+          <span class="ef-datum-name">Histórico familiar DM2</span>
+          <span class="ef-datum-val val-risk">Pai e irmão</span>
+        </div>
+      </div>
+      <div style="padding:1rem;background:#fafaf8;border:1px solid var(--rule);border-radius:3px;font-size:13px;color:#555;line-height:1.7">
+        <strong style="font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Sobre os pesos</strong><br>
+        Cada dado tem α derivado do ponto de corte do estudo original. Glicemia 112 mg/dL → α = 0,8 (pré-DM, ADA 2024). HDL 38 → α = 1,0 (risco SM, IDF 2006). PHQ-9 = 8 → α = 0,7 (leve, Kroenke 2001). Nenhum peso inventado.
+      </div>
+    </div>
+
+    <div class="ef-right">
+      <div class="ef-label">Inferências ativadas pelo engine</div>
+      <div class="ef-inf-list">
+
+        <div class="ef-inf n1">
+          <div class="ef-inf-head">
+            <span class="ef-inf-badge hc-n1">N1</span>
+            <span class="ef-inf-name">Risco DM2 — FINDRISC</span>
+            <span class="ef-inf-pct" style="color:var(--n1)">78%</span>
+          </div>
+          <div class="ef-inf-bar"><div class="ef-inf-fill" style="width:78%;background:var(--n1)"></div></div>
+          <div class="ef-inf-desc"><strong>Médico:</strong> FINDRISC ≥12. Solicitar HbA1c. Metformina se ≥5,7% + IMC &gt;30. <strong>Paciente:</strong> "Seus exames mostram que o risco de desenvolver diabetes está elevado — mas isso é reversível. Perder 5% do peso pode reduzir esse risco em 58%."</div>
+        </div>
+
+        <div class="ef-inf n1">
+          <div class="ef-inf-head">
+            <span class="ef-inf-badge hc-n1">N1</span>
+            <span class="ef-inf-name">Triagem depressão — PHQ-9</span>
+            <span class="ef-inf-pct" style="color:var(--teal)">68%</span>
+          </div>
+          <div class="ef-inf-bar"><div class="ef-inf-fill" style="width:68%;background:var(--teal)"></div></div>
+          <div class="ef-inf-desc"><strong>Médico:</strong> PHQ-9 = 8 (leve). Monitorar progressão. Avaliar se medicação psiquiátrica atual causa ganho de peso. <strong>Paciente:</strong> "Sentir-se sobrecarregado tem impacto real no peso e no sono. Isso não é fraqueza — é biologia, e é tratável."</div>
+        </div>
+
+        <div class="ef-inf n2">
+          <div class="ef-inf-head">
+            <span class="ef-inf-badge hc-n2">N2</span>
+            <span class="ef-inf-name">Síndrome metabólica integrada</span>
+            <span class="ef-inf-pct" style="color:var(--n2)">72%</span>
+          </div>
+          <div class="ef-inf-bar"><div class="ef-inf-fill" style="width:72%;background:var(--n2)"></div></div>
+          <div class="ef-inf-desc"><strong>Médico:</strong> 3/5 critérios SM confirmados. Completar com PA e triglicerídeos. Triglicerídeos + cintura faltando — solicitar. <strong>Paciente:</strong> "Vários fatores juntos se somam. Tratar um melhora os outros — é um sistema."</div>
+        </div>
+
+        <div class="ef-inf n2">
+          <div class="ef-inf-head">
+            <span class="ef-inf-badge hc-n2">N2</span>
+            <span class="ef-inf-name">Saúde mental e emagrecimento</span>
+            <span class="ef-inf-pct" style="color:var(--n2)">61%</span>
+          </div>
+          <div class="ef-inf-bar"><div class="ef-inf-fill" style="width:61%;background:var(--n2)"></div></div>
+          <div class="ef-inf-desc">Depressão ↔ obesidade: OR=1,55 bidirecional (Luppino 2010, n=55.387). Insônia amplifica depressão em 2x (Baglioni 2016). Tratar sono + humor em paralelo — não sequencialmente.</div>
+        </div>
+
+        <div class="ef-action">
+          <div class="ef-action-label">→ Ação de produto derivada do engine</div>
+          <p>Paciente com perfil FINDRISC elevado + PHQ-9 leve + ISI subclínico: oferta apropriada de programa de <strong>acompanhamento metabólico + sono</strong> com base no modelo integrado. A justificativa está nos estudos — não no algoritmo de vendas. Isso é oferta com propósito.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CONTRASTE -->
+<section class="contrast">
+  <div class="contrast-eyebrow">Diferencial</div>
+  <h2 class="contrast-h2">Oferta com propósito vs. venda por vender</h2>
+  <p class="contrast-sub">A diferença não é ética versus comercial, é sustentável versus não-sustentável. Recomendação rastreável gera confiança. Confiança gera retenção.</p>
+  <div class="contrast-cols">
+    <div class="cc bad">
+      <div class="cc-head">Recomendação sem base</div>
+      <div class="cc-item">Algoritmo decide o que oferecer sem declarar por quê</div>
+      <div class="cc-item">Paciente não entende a conexão entre seu estado de saúde e a oferta</div>
+      <div class="cc-item">Mesma oferta para perfis clínicos completamente diferentes</div>
+      <div class="cc-item">Confiança cai quando a oferta não se confirma como relevante</div>
+      <div class="cc-item">Dados de saúde usados como vetor de venda = erosão de relação</div>
+      <div class="cc-item">Nenhuma rastreabilidade científica = impossível auditar ou defender</div>
+    </div>
+    <div class="cc good">
+      <div class="cc-head">Inferência com base científica</div>
+      <div class="cc-item">Cada recomendação tem um modelo com referência publicada, isso é, rastreável</div>
+      <div class="cc-item">Paciente vê o motivo pelo qual a oferta é relevante para seu perfil específico</div>
+      <div class="cc-item">Segmentação por estado clínico real: FINDRISC alto tem oferta diferente de PCR elevado</div>
+      <div class="cc-item">Confiança aumenta quando o usuário percebe que a plataforma entende seu estado de saúde</div>
+      <div class="cc-item">Dados de saúde usados para cuidar: a oferta emerge do cuidado, não o inverso</div>
+      <div class="cc-item">Conformidade CFM + LGPD embutida: disclaimers e limites de triagem visíveis por padrão</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final">
+  <div class="cta-final-in">
+    <div>
+      <h2>Pronto para ver<br><em>o que seus dados dizem</em>?</h2>
+      <p>O engine está disponível agora. A documentação cobre cada modelo, cada peso, cada referência. A conversa sobre integração pode começar hoje.</p>
+    </div>
+    <div class="cta-final-btns">
+      <a href="/app" class="btn btn-primary btn-arrow">Acessar o app</a>
+      <a href="docs_saude_v3.html" class="btn btn-inv">Ler documentação</a>
+      <a href="grafo_saude_v2.html" class="btn btn-inv">Explorar o grafo</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-in">
+    <div class="footer-logo">Inferência em <em>saúde masculina</em></div>
+    <div class="footer-links">
+      <a href="saude_engine_v3.html">Engine v1</a>
+      <a href="grafo_saude_v2.html">Grafo</a>
+      <a href="docs_saude_v3.html">Documentação</a>
+    </div>
+    <div class="footer-copy">Sofia Marshallowitz · Independent Researcher · Abril 2026 · Os pesos refletem importância relativa reportada na literatura, não coeficientes de um modelo treinado em dados proprietários. Instrumento de triagem clínica. Não substitui avaliação médica.</div>
+  </div>
+</footer>
+
+<script src="shared.js" defer></script>
+</body>
+</html>
