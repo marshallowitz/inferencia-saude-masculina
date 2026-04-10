@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engine de Saúde Masculina — App</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+:root{
+  --ink:#0f0e0c;--paper:#f8f6f0;--rule:#d8d4c8;--accent:#1d4ed8;
+  --muted:#8a8680;--n1:#1d4ed8;--n2:#6d28d9;--n3:#c2410c;
+  --teal:#0f766e;--red:#be123c;--success:#15803d;
+  --bg:#f4f1eb;--white:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.6;min-height:100vh}
+
+/* ── SCREEN MANAGEMENT ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── APP SHELL ── */
+.app-shell{max-width:980px;margin:0 auto;padding:2rem 1.5rem 4rem}
+
+/* ── WELCOME ── */
+.welcome-wrap{max-width:700px;margin:5rem auto;text-align:center}
+.welcome-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+.welcome-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(28px,5vw,52px);line-height:1.05;letter-spacing:-.03em;margin-bottom:1rem}
+.welcome-title em{font-style:italic;font-family:'Source Serif 4',serif;font-weight:300;color:var(--accent)}
+.welcome-sub{font-size:16px;color:#555;margin-bottom:3rem;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.8}
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:500px){.role-cards{grid-template-columns:1fr}}
+.role-card{background:#fff;border:2px solid var(--rule);border-radius:8px;padding:2rem 1.5rem;cursor:pointer;transition:all .2s;text-align:left}
+.role-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(29,78,216,.1)}
+.role-card.active{border-color:var(--accent);background:#f0f6ff}
+.role-icon{font-size:28px;margin-bottom:.8rem}
+.role-title{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:.4rem}
+.role-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.welcome-next{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:#f8f6f0;border:none;padding:.85rem 2.5rem;border-radius:4px;cursor:pointer;margin-top:2rem;display:inline-block;transition:all .15s}
+.welcome-next:hover{background:#1a1a18}
+.welcome-next:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── AUTH ── */
+.auth-wrap{max-width:420px;margin:4rem auto}
+.auth-back{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;margin-bottom:2rem;display:inline-flex;align-items:center;gap:.4rem;background:none;border:none;padding:0}
+.auth-back:hover{color:var(--ink)}
+.auth-title{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin-bottom:.3rem}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+.auth-tabs{display:flex;border-bottom:2px solid var(--rule);margin-bottom:2rem}
+.auth-tab{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.6rem 1.2rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);background:none;border-left:none;border-right:none;border-top:none;transition:all .15s}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.form-group{margin-bottom:1.2rem}
+.form-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem}
+.form-input{width:100%;padding:.7rem .9rem;border:1.5px solid var(--rule);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;transition:border-color .15s}
+.form-input:focus{outline:none;border-color:var(--accent)}
+.auth-btn{width:100%;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:#f8f6f0;border:none;padding:.9rem;border-radius:5px;cursor:pointer;margin-top:.5rem;transition:background .15s}
+.auth-btn:hover{background:#1a1a18}
+.auth-error{background:#ffe4e6;border:1px solid #fca5a5;color:#7f1d1d;padding:.6rem .9rem;border-radius:4px;font-size:13px;margin-bottom:1rem;display:none}
+.auth-error.show{display:block}
+
+/* ── DASHBOARD HEADER ── */
+.dash-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2.5rem;gap:1rem;flex-wrap:wrap}
+.dash-greeting{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,4vw,36px);letter-spacing:-.02em;line-height:1.1}
+.dash-greeting em{font-style:italic;font-family:'Source Serif 4',serif;font-weight:300;color:var(--accent)}
+.dash-greeting small{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:.3rem;font-family:'DM Sans',sans-serif;letter-spacing:0}
+.dash-actions{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;padding:.7rem 1.4rem;border-radius:4px;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--ink);color:#f8f6f0}
+.btn-primary:hover{background:#1a1a18}
+.btn-secondary{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.btn-secondary:hover{background:var(--ink);color:#f8f6f0}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--rule)}
+.btn-ghost:hover{border-color:#888;color:var(--ink)}
+.btn-danger{background:transparent;color:var(--red);border:1.5px solid #fca5a5}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-sm{padding:.45rem .9rem;font-size:11px}
+
+/* ── CARD ── */
+.card{background:#fff;border:1.5px solid var(--rule);border-radius:8px;padding:1.4rem 1.5rem;margin-bottom:1rem}
+.card-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:.25rem}
+.card-meta{font-size:12px;color:var(--muted)}
+
+/* ── SECTION LABEL ── */
+.section-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule)}
+
+/* ── RECORD CARD ── */
+.rec-card{background:#fff;border:1.5px solid var(--rule);border-radius:8px;padding:1.2rem 1.4rem;margin-bottom:.8rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;cursor:pointer;transition:all .15s}
+.rec-card:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(29,78,216,.08)}
+.rec-card-left{}
+.rec-date{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:.2rem}
+.rec-summary{font-size:12px;color:var(--muted);line-height:1.5}
+.rec-badges{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem}
+.rec-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px}
+.badge-n1{background:#dbeafe;color:#1e3a8a}
+.badge-n2{background:#ede9fe;color:#4c1d95}
+.badge-n3{background:#ffedd5;color:#7c2d12}
+.rec-pct{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--ink);text-align:right;flex-shrink:0}
+.rec-pct small{display:block;font-size:10px;font-weight:600;color:var(--muted);text-align:right}
+
+/* ── PATIENT LIST ── */
+.patient-card{background:#fff;border:1.5px solid var(--rule);border-radius:8px;padding:1rem 1.3rem;margin-bottom:.7rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;cursor:pointer;transition:all .15s}
+.patient-card:hover{border-color:var(--accent)}
+.patient-avatar{width:40px;height:40px;border-radius:50%;background:#e0dbd2;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#888;flex-shrink:0}
+.patient-info{flex:1}
+.patient-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.patient-meta{font-size:12px;color:var(--muted)}
+
+/* ── SEARCH ── */
+.search-row{display:flex;gap:.7rem;margin-bottom:1.5rem}
+.search-input{flex:1;padding:.65rem .9rem;border:1.5px solid var(--rule);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;transition:border-color .15s}
+.search-input:focus{outline:none;border-color:var(--accent)}
+
+/* ── ENGINE FORM ── */
+.engine-header{background:var(--ink);padding:1.5rem;border-radius:8px;margin-bottom:1.5rem}
+.engine-title{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#f8f6f0;margin-bottom:.3rem}
+.engine-sub{font-size:12px;color:#9ca3af;line-height:1.6}
+.engine-formula{background:#ffffff12;border:1px solid #ffffff22;border-radius:6px;padding:.7rem 1rem;margin-top:.8rem;font-size:12px;color:#cbd5e1;display:inline-block}
+.engine-formula .eq{font-family:'Source Serif 4',serif;font-size:15px;color:#93c5fd}
+
+.engine-layout{display:grid;grid-template-columns:300px 1fr;gap:1.2rem;align-items:start}
+@media(max-width:720px){.engine-layout{grid-template-columns:1fr}}
+
+.engine-sidebar{position:sticky;top:1rem}
+.sel-bar{background:#fff;border:1.5px solid var(--rule);border-radius:7px;padding:.7rem .9rem;margin-bottom:.7rem;display:flex;align-items:center;justify-content:space-between}
+.sel-count{font-family:'Syne',sans-serif;font-size:12px;font-weight:700}
+.sel-btns{display:flex;gap:.35rem}
+.sel-btn{font-size:11px;font-weight:600;font-family:'Syne',sans-serif;padding:3px 9px;border:1.5px solid var(--rule);border-radius:4px;cursor:pointer;background:#fff;color:var(--muted);transition:all .12s}
+.sel-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Category blocks */
+.cat-block{background:#fff;border:1.5px solid var(--rule);border-radius:7px;margin-bottom:.5rem;overflow:hidden}
+.cat-head{display:flex;align-items:center;justify-content:space-between;padding:.55rem .8rem;cursor:pointer;user-select:none;background:#f9f8f5;border-bottom:1px solid transparent;transition:background .12s}
+.cat-head:hover{background:#f0ede6}
+.cat-label-inner{font-size:12px;font-weight:600;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:.4rem}
+.cat-count{font-size:10px;font-weight:600;color:var(--muted);background:var(--rule);padding:1px 6px;border-radius:10px}
+.cat-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
+.cat-block.open .cat-arrow{transform:rotate(90deg)}
+.cat-items{display:none;padding:.4rem .5rem .5rem}
+.cat-block.open .cat-items{display:block}
+
+/* Data pills */
+.dato-wrap{margin-bottom:.5rem}
+.dato-name{font-size:11px;font-weight:600;font-family:'Syne',sans-serif;color:var(--ink);margin-bottom:.25rem;padding:0 .15rem;line-height:1.4}
+.estado-group{display:flex;flex-wrap:wrap;gap:.2rem}
+.est{font-size:10px;font-weight:600;padding:3px 7px;border-radius:4px;cursor:pointer;border:1.5px solid transparent;transition:all .12s;white-space:nowrap;user-select:none;background:#f3f4f6;color:#6b7280;border-color:#d1d5db}
+.est:hover{border-color:#9ca3af;color:var(--ink)}
+.est.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.est.sel.risk-cardio{background:#dc2626;border-color:#dc2626}
+.est.sel.risk-mental{background:#0f766e;border-color:#0f766e}
+.est.sel.risk-onco{background:#be123c;border-color:#be123c}
+.est.sel.risk-farmaco{background:#b45309;border-color:#b45309}
+
+.btn-calc{width:100%;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;background:var(--ink);color:var(--paper);border:none;padding:.85rem;border-radius:6px;cursor:pointer;transition:background .15s;margin-top:.5rem;letter-spacing:.02em}
+.btn-calc:hover:not(:disabled){background:#2d4e8a}
+.btn-calc:disabled{opacity:.4;cursor:not-allowed}
+
+/* Engine results */
+.empty-state{background:#fff;border:1.5px dashed var(--rule);border-radius:8px;padding:3rem 2rem;text-align:center}
+.es-icon{font-size:32px;margin-bottom:.6rem}
+.es-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:.4rem}
+.es-sub{font-size:12px;color:var(--muted);max-width:260px;margin:0 auto}
+
+.results-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+.rm-title{font-family:'Syne',sans-serif;font-weight:800;font-size:18px}
+.rm-pills{display:flex;gap:.35rem;flex-wrap:wrap}
+.rm-pill{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:3px}
+.pill-n1{background:#dbeafe;color:#1e3a8a}
+.pill-n2{background:#ede9fe;color:#4c1d95}
+.pill-n3{background:#ffedd5;color:#7c2d12}
+
+.infer-card{background:#fff;border:1.5px solid var(--rule);border-radius:7px;padding:1rem 1.1rem;margin-bottom:.7rem}
+.ic-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.ic-badge{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px}
+.ic-badge.n1{background:#dbeafe;color:#1e3a8a}
+.ic-badge.n2{background:#ede9fe;color:#4c1d95}
+.ic-badge.n3{background:#ffedd5;color:#7c2d12}
+.ic-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;flex:1}
+.ic-pct{font-family:'Syne',sans-serif;font-weight:800;font-size:15px}
+.ic-bar{height:4px;background:var(--rule);border-radius:2px;overflow:hidden;margin-bottom:.6rem}
+.ic-fill{height:100%;border-radius:2px;background:var(--accent)}
+.ic-fill.n2{background:#6d28d9}
+.ic-fill.n3{background:#c2410c}
+.ic-sugest{font-size:12px;color:#444;line-height:1.65;border-top:1px solid var(--rule);padding-top:.55rem;margin-top:.4rem}
+.ic-sugest strong{font-weight:600;color:var(--ink)}
+.alert-mental{border-left:3px solid var(--teal)}
+
+/* Save record block */
+.save-record-block{background:#fff;border:2px solid var(--ink);border-radius:8px;padding:1.5rem;margin-top:1.5rem}
+.save-record-block h3{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;margin-bottom:.8rem}
+.notes-input{width:100%;padding:.6rem .8rem;border:1.5px solid var(--rule);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;min-height:70px;color:var(--ink)}
+.notes-input:focus{outline:none;border-color:var(--accent)}
+
+/* Record detail */
+.record-detail-header{background:var(--ink);color:#f8f6f0;padding:1.5rem;border-radius:8px;margin-bottom:1.5rem}
+.rd-date{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#93c5fd;margin-bottom:.4rem}
+.rd-patient{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;margin-bottom:.2rem}
+.rd-meta{font-size:12px;color:#9ca3af}
+
+.input-summary{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1.2rem}
+.is-pill{font-size:11px;padding:3px 9px;border-radius:4px;background:#f0f0ea;color:#555;border:1px solid var(--rule)}
+.is-pill.risk{background:#ffe4e6;color:var(--red);border-color:#fca5a5}
+
+/* Timeline */
+.timeline{position:relative;padding-left:1.5rem}
+.timeline::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:var(--rule)}
+.tl-item{position:relative;margin-bottom:1.2rem}
+.tl-dot{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent);position:absolute;left:-1.5rem;top:4px}
+.tl-date{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:.2rem}
+.tl-card{background:#fff;border:1.5px solid var(--rule);border-radius:6px;padding:.8rem 1rem;cursor:pointer;transition:border-color .15s}
+.tl-card:hover{border-color:var(--accent)}
+.tl-inference{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:.2rem}
+.tl-pct{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent)}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#f8f6f0;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;padding:.7rem 1.5rem;border-radius:6px;z-index:999;transition:transform .3s;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:#7f1d1d}
+
+/* Empty state */
+.empty-records{background:#fff;border:1.5px dashed var(--rule);border-radius:8px;padding:2.5rem 2rem;text-align:center}
+.empty-records .er-icon{font-size:28px;margin-bottom:.6rem}
+.empty-records p{font-size:13px;color:var(--muted)}
+
+/* Loading */
+.loading{text-align:center;padding:3rem;font-family:'Syne',sans-serif;font-size:13px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* Tabs (for record detail med/patient view) */
+.view-tabs{display:flex;border-bottom:2px solid var(--rule);margin-bottom:1rem}
+.view-tab{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);background:none;border-left:none;border-right:none;border-top:none;transition:all .15s}
+.view-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div id="read-progress"></div>
+
+<!-- ═══════════════════════ WELCOME SCREEN ═══════════════════════ -->
+<div id="screen-welcome" class="screen active">
+<div class="app-shell">
+<div class="welcome-wrap">
+  <div class="welcome-eyebrow">Engine de Inferência · Saúde Masculina</div>
+  <h1 class="welcome-title">Como você<br>quer <em>acessar</em>?</h1>
+  <p class="welcome-sub">Seu papel determina o que você vê e como os dados são organizados. Médicos gerenciam múltiplos pacientes com histórico temporal. Pacientes acompanham a própria saúde ao longo do tempo.</p>
+  <div class="role-cards">
+    <div class="role-card" id="role-doctor" onclick="selectRole('doctor')">
+      <div class="role-icon">🩺</div>
+      <div class="role-title">Médico / Clínico</div>
+      <div class="role-desc">Acesse os registros de todos os seus pacientes, veja a evolução temporal e rode o engine com qualquer conjunto de dados.</div>
+    </div>
+    <div class="role-card" id="role-patient" onclick="selectRole('patient')">
+      <div class="role-icon">🧑</div>
+      <div class="role-title">Paciente</div>
+      <div class="role-desc">Informe seus dados clínicos, acompanhe suas inferências ao longo do tempo e entenda o que os resultados significam.</div>
+    </div>
+  </div>
+  <button class="welcome-next" id="btn-next-role" onclick="goToAuth()" disabled>Continuar →</button>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
+<div id="screen-auth" class="screen">
+<div class="app-shell">
+<div class="auth-wrap">
+  <button class="auth-back" onclick="showScreen('welcome')">← Voltar</button>
+  <div id="auth-role-badge" style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem"></div>
+  <h1 class="auth-title">Acesse sua conta</h1>
+  <p class="auth-sub">Ou crie uma nova gratuitamente</p>
+  <div class="auth-tabs">
+    <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
+    <button class="auth-tab" onclick="switchAuthTab('register')">Cadastrar</button>
+  </div>
+  <div id="auth-error" class="auth-error"></div>
+  <!-- LOGIN -->
+  <div id="tab-login">
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input type="email" class="form-input" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="auth-btn" onclick="doLogin()">Entrar →</button>
+  </div>
+  <!-- REGISTER -->
+  <div id="tab-register" style="display:none">
+    <div class="form-group">
+      <label class="form-label">Nome completo</label>
+      <input type="text" class="form-input" id="reg-name" placeholder="Seu nome">
+    </div>
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input type="email" class="form-input" id="reg-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha (mín. 6 caracteres)</label>
+      <input type="password" class="form-input" id="reg-password" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button class="auth-btn" onclick="doRegister()">Criar conta →</button>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════ PATIENT DASHBOARD ═══════════════════════ -->
+<div id="screen-patient" class="screen">
+<div class="app-shell">
+  <div class="dash-header">
+    <div class="dash-greeting">
+      Olá, <em id="pat-name">—</em>
+      <small id="pat-meta">Paciente · seus dados de saúde</small>
+    </div>
+    <div class="dash-actions">
+      <button class="btn btn-primary" onclick="startEngine(null, null)">+ Nova avaliação</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="section-label">Histórico de avaliações</div>
+  <div id="pat-records-list"><div class="loading">Carregando…</div></div>
+</div>
+</div>
+
+<!-- ═══════════════════════ DOCTOR DASHBOARD ═══════════════════════ -->
+<div id="screen-doctor" class="screen">
+<div class="app-shell">
+  <div class="dash-header">
+    <div class="dash-greeting">
+      Dr(a). <em id="doc-name">—</em>
+      <small id="doc-meta">Médico · painel de pacientes</small>
+    </div>
+    <div class="dash-actions">
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="section-label">Adicionar paciente por e-mail</div>
+  <div class="search-row">
+    <input type="email" class="search-input" id="patient-search-email" placeholder="email@paciente.com" onkeydown="if(event.key==='Enter')searchPatient()">
+    <button class="btn btn-primary" onclick="searchPatient()">Buscar</button>
+  </div>
+  <div id="search-result" style="margin-bottom:1.5rem"></div>
+
+  <div class="section-label">Meus pacientes</div>
+  <div id="doc-patients-list"><div class="loading">Carregando…</div></div>
+</div>
+</div>
+
+<!-- ═══════════════════════ PATIENT RECORDS VIEW (doctor seeing patient) ═══════════════════════ -->
+<div id="screen-patient-records" class="screen">
+<div class="app-shell">
+  <div class="dash-header">
+    <div>
+      <button class="auth-back" style="margin-bottom:.5rem" onclick="showScreen('doctor');loadDoctorPatients()">← Pacientes</button>
+      <div class="dash-greeting">
+        <em id="pr-patient-name">—</em>
+        <small id="pr-patient-meta">Paciente</small>
+      </div>
+    </div>
+    <div class="dash-actions">
+      <button class="btn btn-primary" id="btn-new-for-patient" onclick="startEngineForPatient()">+ Nova avaliação</button>
+    </div>
+  </div>
+  <div class="section-label">Histórico clínico</div>
+  <div id="pr-records-list"><div class="loading">Carregando…</div></div>
+</div>
+</div>
+
+<!-- ═══════════════════════ ENGINE SCREEN ═══════════════════════ -->
+<div id="screen-engine" class="screen">
+<div class="app-shell">
+  <div style="margin-bottom:1rem">
+    <button class="auth-back" id="engine-back-btn" onclick="engineGoBack()">← Voltar</button>
+  </div>
+
+  <div class="engine-header">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div class="engine-title">Avaliação clínica</div>
+        <div class="engine-sub" id="engine-context-sub">Selecione o resultado de cada dado clínico. O engine calcula inferências epidemiológicas ponderadas.</div>
+      </div>
+      <div class="engine-formula">
+        <div class="eq">C<sub>m</sub> = Σ(w<sub>i</sub>·α<sub>i</sub>) / Σw<sub>i</sub></div>
+        <div style="margin-top:.3rem;font-size:11px;opacity:.7">α=1,0 risco · 0,3 normal · 0 não informado</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="engine-layout">
+    <!-- LEFT: Data input -->
+    <div class="engine-sidebar">
+      <div class="sel-bar">
+        <div>
+          <div class="sel-count"><span id="sel-n">0</span> dados informados</div>
+          <div id="sel-risk" style="font-size:11px;color:var(--red);font-weight:600;display:none"></div>
+        </div>
+        <div class="sel-btns">
+          <button class="sel-btn" onclick="clearAll()">Limpar</button>
+          <button class="sel-btn" onclick="presetDemo()">Exemplo</button>
+        </div>
+      </div>
+      <div id="cat-list"></div>
+      <button class="btn-calc" id="btn-calc" onclick="calcular()" disabled>Calcular inferências →</button>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div id="results-panel">
+      <div class="empty-state" id="engine-empty">
+        <div class="es-icon">⚕</div>
+        <div class="es-title">Informe os dados clínicos</div>
+        <p class="es-sub">Selecione o estado de cada exame ou escala. Dados em risco ativam modelos com força total.</p>
+      </div>
+      <div id="engine-results" style="display:none"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════ RECORD DETAIL ═══════════════════════ -->
+<div id="screen-record-detail" class="screen">
+<div class="app-shell">
+  <button class="auth-back" id="detail-back-btn" onclick="detailGoBack()">← Voltar</button>
+  <div class="record-detail-header">
+    <div class="rd-date" id="rd-date">—</div>
+    <div class="rd-patient" id="rd-title">Avaliação clínica</div>
+    <div class="rd-meta" id="rd-meta">—</div>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" onclick="switchDetailTab('results')">Inferências</button>
+    <button class="view-tab" onclick="switchDetailTab('diag')">Diagnósticos</button>
+    <button class="view-tab" onclick="switchDetailTab('invest')">Investigações</button>
+    <button class="view-tab" onclick="switchDetailTab('suggest')">Condutas</button>
+    <button class="view-tab" onclick="switchDetailTab('inputs')">Dados</button>
+  </div>
+
+  <div id="detail-tab-results"></div>
+  <div id="detail-tab-diag" style="display:none"></div>
+  <div id="detail-tab-invest" style="display:none"></div>
+  <div id="detail-tab-suggest" style="display:none"></div>
+  <div id="detail-tab-inputs" style="display:none"></div>
+</div>
+</div>
+
+<!-- ═══════════════════════ TOAST ═══════════════════════ -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  ENGINE DATA (from saude_engine_v3.html)
+// ══════════════════════════════════════════════════════════════════
+const CATS = [
+  {id:'antropo',   label:'Antropometria',             icon:'📏'},
+  {id:'metabol',   label:'Metabólico / laboratorial', icon:'🩸'},
+  {id:'cardio',    label:'Cardiovascular',            icon:'❤️'},
+  {id:'mental',    label:'Saúde mental',              icon:'🧠'},
+  {id:'sono',      label:'Sono e circadiano',         icon:'🌙'},
+  {id:'comport',   label:'Comportamental',            icon:'🏃'},
+  {id:'hx',        label:'Histórico e família',       icon:'📋'},
+  {id:'fenotip',   label:'Fenotipagem digital',       icon:'⌚'},
+  {id:'gi',        label:'Gastrointestinal',          icon:'🫁'},
+  {id:'prostata',  label:'Próstata',                  icon:'🎗️'},
+  {id:'onco',      label:'Oncológico',                icon:'🔬'},
+  {id:'inflamacao',label:'Inflamação',                icon:'🧬'},
+];
+
+function st(label,alpha,risco){return{label,alpha,risco:!!risco};}
+
+const DADOS=[
+  {id:'imc',cat:'antropo',nome:'IMC (kg/m²)',dom:'metabol',estados:[st('<25 — normal',0.3,false),st('25–29 — sobrepeso',0.6,true),st('30–34 — obeso I',1.0,true),st('35–39 — obeso II',1.0,true),st('≥40 — obeso III',1.0,true)]},
+  {id:'cintura',cat:'antropo',nome:'Circunferência abdominal (cm)',dom:'metabol',estados:[st('<94cm — normal',0.3,false),st('94–101cm — risco',0.7,true),st('≥102cm — risco alto',1.0,true)]},
+  {id:'peso_desejado',cat:'antropo',nome:'Objetivo de perda de peso',dom:'metabol',estados:[st('Manutenção / <5%',0.3,false),st('5–10% do peso',0.8,true),st('>10% do peso',1.0,true)]},
+  {id:'variacao_peso',cat:'antropo',nome:'Variação de peso recente (6m)',dom:'metabol',estados:[st('Estável (±2kg)',0.3,false),st('Ganho 3–7kg',0.8,true),st('Ganho >7kg',1.0,true),st('Perda inexplicada',1.0,true)]},
+  {id:'glicemia',cat:'metabol',nome:'Glicemia em jejum (mg/dL)',dom:'metabol',estados:[st('<100 — normal',0.3,false),st('100–125 — pré-DM',0.8,true),st('≥126 — DM2',1.0,true)]},
+  {id:'hba1c',cat:'metabol',nome:'HbA1c (%)',dom:'metabol',estados:[st('<5,7% — normal',0.3,false),st('5,7–6,4% — pré-DM',0.8,true),st('≥6,5% — DM2',1.0,true)]},
+  {id:'colesterol',cat:'metabol',nome:'Colesterol total (mg/dL)',dom:'cardio',estados:[st('<200 — desejável',0.3,false),st('200–239 — limítrofe',0.7,true),st('≥240 — alto',1.0,true)]},
+  {id:'triglicerides',cat:'metabol',nome:'Triglicerídeos (mg/dL)',dom:'metabol',estados:[st('<150 — normal',0.3,false),st('150–199 — limítrofe',0.7,true),st('≥200 — alto',1.0,true)]},
+  {id:'hdl',cat:'metabol',nome:'HDL (mg/dL)',dom:'metabol',estados:[st('≥60 — protetor',0.1,false),st('41–59 — normal-baixo',0.3,false),st('≤40 — risco (SM)',1.0,true)]},
+  {id:'insulina',cat:'metabol',nome:'Insulina em jejum (µU/mL)',dom:'metabol',estados:[st('<10 — normal',0.3,false),st('10–15 — limítrofe',0.7,true),st('>15 — hiperinsulinemia',1.0,true)]},
+  {id:'tsh',cat:'metabol',nome:'TSH (mUI/L)',dom:'metabol',estados:[st('0,4–4,0 — normal',0.3,false),st('>4,0 — hipotireoidismo',1.0,true),st('<0,4 — hipertireoidismo',0.6,true)]},
+  {id:'testosterona',cat:'metabol',nome:'Testosterona total (ng/dL)',dom:'metabol',estados:[st('≥300 — normal',0.3,false),st('200–299 — baixo-normal',0.7,true),st('<200 — hipogonadismo',1.0,true)]},
+  {id:'pressao',cat:'cardio',nome:'Pressão arterial (mmHg)',dom:'cardio',estados:[st('<120/80 — ótima',0.1,false),st('120–129 — normal',0.3,false),st('130–139/80–89 — estágio 1',0.8,true),st('≥140/90 — estágio 2',1.0,true)]},
+  {id:'fc_repouso',cat:'cardio',nome:'FC em repouso (bpm)',dom:'cardio',estados:[st('<70 bpm — normal',0.3,false),st('70–79 bpm',0.5,false),st('80–99 bpm — elevada',0.8,true),st('≥100 bpm — taquicardia',1.0,true)]},
+  {id:'tabagismo',cat:'cardio',nome:'Tabagismo',dom:'cardio',estados:[st('Nunca fumou',0.1,false),st('Ex-fumante >5 anos',0.3,false),st('Ex-fumante <5 anos',0.7,true),st('Fumante atual',1.0,true)]},
+  {id:'medic_antihiper',cat:'cardio',nome:'Anti-hipertensivo em uso',dom:'cardio',estados:[st('Não usa',0.1,false),st('Usa — PA controlada',0.6,true),st('Usa — PA não controlada',1.0,true)]},
+  {id:'diabetes',cat:'cardio',nome:'Diabetes diagnosticado',dom:'metabol',estados:[st('Não tem DM',0.1,false),st('Pré-diabetes',0.6,true),st('DM2 controlado',0.8,true),st('DM2 descompensado',1.0,true)]},
+  {id:'phq2',cat:'mental',nome:'PHQ-2 (triagem depressão)',dom:'mental',estados:[st('0–2 — negativo',0.3,false),st('3–4 — positivo leve',0.8,true),st('5–6 — positivo',1.0,true)]},
+  {id:'phq9',cat:'mental',nome:'PHQ-9 (depressão completa)',dom:'mental',estados:[st('0–4 — sem depressão',0.3,false),st('5–9 — leve',0.7,true),st('10–14 — moderada',0.9,true),st('15–27 — grave',1.0,true)]},
+  {id:'gad7',cat:'mental',nome:'GAD-7 (ansiedade)',dom:'mental',estados:[st('0–4 — normal',0.3,false),st('5–9 — leve',0.7,true),st('10–14 — moderada',0.9,true),st('15–21 — grave',1.0,true)]},
+  {id:'diag_mental',cat:'mental',nome:'Diagnóstico de saúde mental',dom:'mental',estados:[st('Sem diagnóstico',0.1,false),st('Ansiedade / pânico',0.8,true),st('Depressão',0.9,true),st('Bipolar / psicose',1.0,true)]},
+  {id:'medic_psiq',cat:'mental',nome:'Medicação psiquiátrica',dom:'mental',estados:[st('Não usa',0.1,false),st('Usa — estável',0.6,true),st('Usa — instável',1.0,true)]},
+  {id:'estresse_percebido',cat:'mental',nome:'Estresse percebido (PSS-10)',dom:'mental',estados:[st('Baixo (0–13)',0.3,false),st('Moderado (14–26)',0.7,true),st('Alto (27–40)',1.0,true)]},
+  {id:'qualidade_vida',cat:'mental',nome:'Qualidade de vida (SF-12/36)',dom:'mental',estados:[st('Boa / preservada',0.3,false),st('Comprometida',0.8,true),st('Muito comprometida',1.0,true)]},
+  {id:'distress_onco',cat:'mental',nome:'Distress oncológico (DT/NCCN)',dom:'mental',estados:[st('0–3 — baixo',0.3,false),st('4–6 — moderado',0.8,true),st('7–10 — alto',1.0,true)]},
+  {id:'medo_recorrencia',cat:'mental',nome:'Medo de recorrência (FCR)',dom:'mental',estados:[st('Baixo / ausente',0.3,false),st('Moderado',0.7,true),st('Alto / incapacitante',1.0,true)]},
+  {id:'suporte_social',cat:'mental',nome:'Suporte social percebido',dom:'mental',estados:[st('Bom suporte',0.3,false),st('Suporte limitado',0.7,true),st('Isolado / sem suporte',1.0,true)]},
+  {id:'funcao_sexual',cat:'mental',nome:'Função sexual / IIEF',dom:'mental',estados:[st('Normal (22–25)',0.3,false),st('Disfunção leve (12–21)',0.7,true),st('Disfunção grave (<12)',1.0,true)]},
+  {id:'sono_horas',cat:'sono',nome:'Duração do sono (h/noite)',dom:'sono',estados:[st('7–9h — adequado',0.3,false),st('6–6,9h — curto',0.7,true),st('<6h — insuficiente',1.0,true),st('>9h — excessivo',0.5,true)]},
+  {id:'sono_qualidade',cat:'sono',nome:'Qualidade do sono (ISI)',dom:'sono',estados:[st('0–7 — sem insônia',0.3,false),st('8–14 — insônia subclínica',0.7,true),st('15–21 — insônia moderada',0.9,true),st('22–28 — insônia grave',1.0,true)]},
+  {id:'apneia',cat:'sono',nome:'Apneia do sono (SAOS)',dom:'sono',estados:[st('Sem apneia / descartada',0.1,false),st('Suspeita clínica',0.7,true),st('SAOS leve-moderada',0.9,true),st('SAOS grave',1.0,true)]},
+  {id:'sonolencia',cat:'sono',nome:'Sonolência diurna (Epworth)',dom:'sono',estados:[st('0–10 — normal',0.3,false),st('11–16 — excessiva',0.8,true),st('17–24 — grave',1.0,true)]},
+  {id:'ritmo_circadiano',cat:'sono',nome:'Regularidade circadiana',dom:'sono',estados:[st('Regular',0.3,false),st('Irregular moderado',0.7,true),st('Muito irregular',1.0,true)]},
+  {id:'atv_fisica',cat:'comport',nome:'Nível de atividade física',dom:'metabol',estados:[st('≥150 min/sem — ativo',0.1,false),st('60–149 min/sem — insuficiente',0.6,true),st('<60 min/sem — sedentário',1.0,true)]},
+  {id:'dieta',cat:'comport',nome:'Qualidade da dieta',dom:'metabol',estados:[st('Saudável / mediterrânea',0.1,false),st('Mista',0.4,false),st('Pobre / ultraprocessados',1.0,true)]},
+  {id:'alcool',cat:'comport',nome:'Consumo de álcool',dom:'onco',estados:[st('Abstêmio / social (<7/sem)',0.2,false),st('Moderado (7–14/sem)',0.6,true),st('Intenso (>14/sem)',1.0,true)]},
+  {id:'tabaco',cat:'comport',nome:'Tabagismo (carga)',dom:'cardio',estados:[st('Nunca fumou',0.1,false),st('<10 cig/dia ou <10 anos-maço',0.6,true),st('≥10 cig/dia ou ≥10 anos-maço',1.0,true)]},
+  {id:'sedentarismo',cat:'comport',nome:'Tempo sentado (h/dia)',dom:'metabol',estados:[st('<6h/dia',0.2,false),st('6–9h/dia',0.6,true),st('≥10h/dia',1.0,true)]},
+  {id:'idade',cat:'hx',nome:'Idade',dom:'metabol',estados:[st('<40 anos',0.2,false),st('40–49 anos',0.5,true),st('50–59 anos',0.8,true),st('≥60 anos',1.0,true)]},
+  {id:'hist_glicemia',cat:'hx',nome:'Histórico glicemia alta',dom:'metabol',estados:[st('Sem histórico',0.1,false),st('Glicemia alta isolada',0.8,true),st('Múltiplas ocorrências',1.0,true)]},
+  {id:'hist_familiar_dm',cat:'hx',nome:'Histórico familiar DM2',dom:'metabol',estados:[st('Sem histórico',0.1,false),st('Parente 2º grau',0.5,true),st('Parente 1º grau (pai, irmão)',1.0,true)]},
+  {id:'hist_familiar_cv',cat:'hx',nome:'Histórico familiar cardiovascular',dom:'cardio',estados:[st('Sem histórico',0.1,false),st('Familiar DCV >55 anos',0.5,true),st('Familiar DCV <55 anos',1.0,true)]},
+  {id:'hist_familiar_prostata',cat:'hx',nome:'Histórico familiar próstata',dom:'onco',estados:[st('Sem histórico',0.1,false),st('1 familiar afetado',0.8,true),st('≥2 familiares ou início <60a',1.0,true)]},
+  {id:'glp1_historico',cat:'hx',nome:'Histórico de uso de GLP-1',dom:'farmaco',estados:[st('Nunca usou',0.3,false),st('Usou — boa resposta',0.5,false),st('Usou — intolerância',0.8,true),st('Em uso atual',0.6,true)]},
+  {id:'hrv',cat:'fenotip',nome:'HRV (variabilidade cardíaca)',dom:'mental',estados:[st('Normal / alta',0.2,false),st('Reduzida (↓10–20%)',0.7,true),st('Muito reduzida (↓>20%)',1.0,true)]},
+  {id:'sono_wearable',cat:'fenotip',nome:'Sono via wearable',dom:'sono',estados:[st('Normal (≥85% eficiência)',0.3,false),st('Degradado (75–84%)',0.7,true),st('Muito degradado (<75%)',1.0,true)]},
+  {id:'passos_dia',cat:'fenotip',nome:'Passos/dia',dom:'metabol',estados:[st('>8.000 passos/dia',0.2,false),st('5.000–8.000',0.5,true),st('<5.000 passos/dia',1.0,true)]},
+  {id:'uso_noturno',cat:'fenotip',nome:'Uso noturno do dispositivo',dom:'mental',estados:[st('Raro ou ausente',0.2,false),st('Frequente (>3 noites/sem)',0.8,true),st('Diário',1.0,true)]},
+  {id:'gi_gastroparesia',cat:'gi',nome:'Gastroparesia',dom:'farmaco',estados:[st('Ausente',0.1,false),st('Suspeita',0.7,true),st('Confirmada — contraindicação',1.0,true)]},
+  {id:'sintomas_gi',cat:'gi',nome:'Sintomas GI atuais',dom:'farmaco',estados:[st('Ausentes',0.1,false),st('Leves / ocasionais',0.5,true),st('Frequentes / intensos',1.0,true)]},
+  {id:'psa',cat:'prostata',nome:'PSA total (ng/mL)',dom:'onco',estados:[st('<2,5 — baixo',0.2,false),st('2,5–3,9 — zona cinza',0.6,true),st('4,0–9,9 — elevado',0.9,true),st('≥10 — muito elevado',1.0,true)]},
+  {id:'psa_livre',cat:'prostata',nome:'%PSA livre',dom:'onco',estados:[st('>25% — baixo risco',0.2,false),st('15–25% — intermediário',0.6,true),st('<15% — risco de neoplasia',1.0,true)]},
+  {id:'dre',cat:'prostata',nome:'Toque retal (DRE)',dom:'onco',estados:[st('Normal',0.2,false),st('Alterado — nódulo / induração',1.0,true)]},
+  {id:'sint_urinarios',cat:'prostata',nome:'Sintomas urinários (IPSS)',dom:'onco',estados:[st('0–7 — leve',0.3,false),st('8–19 — moderado',0.7,true),st('20–35 — grave',1.0,true)]},
+  {id:'hist_familiar_crc',cat:'onco',nome:'Histórico familiar — câncer colorretal',dom:'onco',estados:[st('Sem histórico',0.1,false),st('1 familiar >60 anos',0.6,true),st('1 familiar <60 anos ou 2+',1.0,true)]},
+  {id:'sangue_fezes',cat:'onco',nome:'FIT / Sangue nas fezes',dom:'onco',estados:[st('Negativo',0.1,false),st('Positivo',1.0,true)]},
+  {id:'dieta_vermelha',cat:'onco',nome:'Carne vermelha / processada',dom:'onco',estados:[st('<300g/sem — baixo',0.2,false),st('300–500g/sem — moderado',0.6,true),st('>500g/sem — alto',1.0,true)]},
+  {id:'historico_cancer',cat:'onco',nome:'Histórico pessoal de câncer',dom:'onco',estados:[st('Sem histórico',0.1,false),st('Remissão >5 anos',0.5,true),st('Remissão <5 anos',1.0,true)]},
+  {id:'pcr_alta',cat:'inflamacao',nome:'PCR ultrassensível (mg/L)',dom:'metabol',estados:[st('<1 — baixo risco',0.2,false),st('1–3 — moderado',0.5,true),st('>3 — alto / inflamação crônica',1.0,true)]},
+  {id:'leucocitos',cat:'inflamacao',nome:'Leucócitos totais (/mm³)',dom:'metabol',estados:[st('4.000–8.000 — normal',0.2,false),st('8.001–11.000 — elevado leve',0.7,true),st('>11.000 — leucocitose',1.0,true)]},
+  {id:'ferritina',cat:'inflamacao',nome:'Ferritina sérica (ng/mL)',dom:'metabol',estados:[st('<200 — normal',0.2,false),st('200–500 — elevada',0.7,true),st('>500 — muito elevada',1.0,true)]},
+  {id:'adiponectina',cat:'inflamacao',nome:'Adiponectina sérica (µg/mL)',dom:'metabol',estados:[st('≥10 — adequada',0.2,false),st('5–9 — reduzida',0.7,true),st('<5 — muito baixa',1.0,true)]},
+  {id:'igf1',cat:'inflamacao',nome:'IGF-1 (ng/mL)',dom:'metabol',estados:[st('Normal para idade',0.2,false),st('Elevado leve',0.7,true),st('Muito elevado',1.0,true)]},
+];
+
+const DADOS_IDX = Object.fromEntries(DADOS.map(d=>[d.id,d]));
+
+const N1=[
+{id:'n1_obesidade',nivel:'N1',nome:'Obesidade e perfil adiposo',dominio:'Metabolismo',ref:'ABESO 2022; IDF 2006',alertMental:false,
+ vars:[{id:'imc',p:35},{id:'cintura',p:25},{id:'peso_desejado',p:15},{id:'atv_fisica',p:15},{id:'variacao_peso',p:10}],
+ medSugest:['IMC ≥30 = indicação de intervenção ativa. Avaliar elegibilidade GLP-1: IMC ≥30 ou ≥27 com comorbidade (ABESO 2022).','Meta de perda de peso: 5–10% do peso inicial reduz risco cardiometabólico significativamente.'],
+ patSugest:['Seu IMC e medidas indicam o grau de sobrepeso. Perder entre 5–10% do peso já traz benefícios reais para o coração, diabetes e pressão.'],
+ exames:[
+  {exam:'TSH + T4 livre',indicacao:'Excluir hipotireoidismo como causa de obesidade',urgencia:'breve',ref:'ATA 2014'},
+  {exam:'Bioimpedância ou DEXA',indicacao:'Quantificar % gordura corporal e massa magra',urgencia:'eletiva',ref:'ABESO 2022'},
+  {exam:'Avaliação nutricional (R24h)',indicacao:'Padrão alimentar e calorias habituais',urgencia:'eletiva',ref:'ABESO 2022'},
+ ]},
+{id:'n1_dm2',nivel:'N1',nome:'Risco de diabetes tipo 2 (FINDRISC)',dominio:'Metabolismo',ref:'Lindström & Tuomilehto 2003; AUC=0,76',alertMental:false,
+ vars:[{id:'hist_glicemia',p:25},{id:'hist_familiar_dm',p:19},{id:'imc',p:18},{id:'atv_fisica',p:15},{id:'medic_antihiper',p:12},{id:'idade',p:11}],
+ medSugest:['FINDRISC ≥12: solicitar glicemia jejum + HbA1c. Pré-diabetes: intervenção no estilo de vida + Metformina (SBD 2024).','Histórico familiar de 1º grau: triagem anual.'],
+ patSugest:['Um exame de sangue simples pode identificar pré-diabetes muito antes de desenvolver a doença. Tratado cedo, é reversível. Perder 5–7% do peso reduz o risco em até 58%.'],
+ exames:[
+  {exam:'Glicemia em jejum',indicacao:'Rastreamento DM2 — FINDRISC ≥12',urgencia:'breve',ref:'SBD 2024; ADA 2024'},
+  {exam:'HbA1c',indicacao:'Diagnóstico de pré-diabetes (5,7–6,4%) ou DM2 (≥6,5%)',urgencia:'breve',ref:'ADA 2024'},
+  {exam:'Insulina em jejum (HOMA-IR)',indicacao:'Avaliar resistência insulínica antes de DM2 instalado',urgencia:'eletiva',ref:'Matthews 1985'},
+ ]},
+{id:'n1_cardio',nivel:'N1',nome:'Risco cardiovascular (Framingham)',dominio:'Cardiovascular',ref:"D'Agostino 2008; AUC=0,794",alertMental:false,
+ vars:[{id:'pressao',p:28},{id:'colesterol',p:22},{id:'tabagismo',p:14},{id:'diabetes',p:14},{id:'idade',p:14},{id:'medic_antihiper',p:8}],
+ medSugest:['Calcular Escore de Risco Global SBC após obter PA, colesterol, glicemia.','Estatinas: LDL elevado + risco CV >10% em 10 anos — conforme SBC 2022.'],
+ patSugest:['Conhecer seu risco cardiovascular em 10 anos é o primeiro passo para agir antes que algo aconteça.'],
+ exames:[
+  {exam:'Lipidograma completo (CT, LDL, HDL, TG)',indicacao:'Cálculo do Escore de Risco Global — SBC/Framingham',urgencia:'breve',ref:"D'Agostino 2008; SBC 2022"},
+  {exam:'Glicemia em jejum',indicacao:'Componente do escore de Framingham',urgencia:'breve',ref:'SBC 2022'},
+  {exam:'ECG de repouso',indicacao:'Avaliar arritmias e hipertrofia ventricular esquerda',urgencia:'eletiva',ref:'SBC 2022'},
+  {exam:'Medida bilateral da PA',indicacao:'Confirmar hipertensão; diferença >10mmHg sugere doença vascular',urgencia:'consulta',ref:'SBH 2020'},
+ ]},
+{id:'n1_sindrome_met_vars',nivel:'N1',nome:'Componentes da síndrome metabólica',dominio:'Metabolismo',ref:'Alberti et al. 2009; IDF/AHA/NHLBI',alertMental:false,
+ vars:[{id:'cintura',p:22},{id:'triglicerides',p:20},{id:'hdl',p:20},{id:'pressao',p:20},{id:'glicemia',p:18}],
+ medSugest:['≥3 critérios = síndrome metabólica estabelecida (Alberti 2009). Solicitar perfil metabólico completo.','Priorizar redução de triglicerídeos e cintura abdominal.'],
+ patSugest:['A síndrome metabólica é um conjunto de fatores que, juntos, aumentam muito o risco de doenças sérias. É tratável.'],
+ exames:[
+  {exam:'Glicemia em jejum + HbA1c',indicacao:'Critério glicêmico da SM (≥100 mg/dL em jejum)',urgencia:'breve',ref:'Alberti 2009'},
+  {exam:'Lipidograma (TG + HDL)',indicacao:'Critérios lipídicos da SM: TG ≥150, HDL <40 mg/dL',urgencia:'breve',ref:'Alberti 2009'},
+  {exam:'PCR ultrassensível',indicacao:'Marcador inflamatório — SM duplica PCR',urgencia:'eletiva',ref:'ERFC 2010 JAMA'},
+  {exam:'USG abdominal',indicacao:'Esteatose hepática — presente em 70% da SM',urgencia:'eletiva',ref:'EASL 2023'},
+ ]},
+{id:'n1_resistencia_insulinica',nivel:'N1',nome:'Resistência insulínica / hiperinsulinemia',dominio:'Metabolismo',ref:'Matthews 1985 (HOMA-IR); NCI 2024',alertMental:false,
+ vars:[{id:'insulina',p:35},{id:'hba1c',p:25},{id:'glicemia',p:18},{id:'imc',p:12},{id:'igf1',p:10}],
+ medSugest:['HOMA-IR = (insulina µU/mL × glicemia mg/dL) / 405. >2,5 = resistência insulínica.','RI + obesidade: avaliar metformina mesmo sem DM2. Reduz progressão para DM2 em 31% (DPP 2002).'],
+ patSugest:['A resistência à insulina é como o motor do carro respondendo mal ao combustível — sinal de que o metabolismo precisa de atenção. Tratar isso agora é muito mais fácil.'],
+ exames:[
+  {exam:'Insulina em jejum + glicemia (HOMA-IR)',indicacao:'HOMA-IR >2,5 confirma resistência insulínica',urgencia:'breve',ref:'Matthews 1985'},
+  {exam:'HbA1c',indicacao:'Avaliar cronificação da hiperglicemia',urgencia:'breve',ref:'ADA 2024'},
+  {exam:'IGF-1 sérico',indicacao:'Elevado na RI — mecanismo de carcinogênese metabólica',urgencia:'eletiva',ref:'IARC 2024'},
+ ]},
+{id:'n1_inflamacao_cronica',nivel:'N1',nome:'Inflamação crônica de baixo grau',dominio:'Metabolismo',ref:'ERFC 2010 JAMA (n=160.309)',alertMental:false,
+ vars:[{id:'pcr_alta',p:35},{id:'imc',p:22},{id:'cintura',p:18},{id:'adiponectina',p:15},{id:'leucocitos',p:10}],
+ medSugest:['PCR-us >3 mg/L: excluir infecção/autoimune. Repetir em 2 semanas se valor alto.','PCR persistentemente elevado em obeso: perda de 10% do peso reduz PCR em 25–40%.'],
+ patSugest:['Inflamação crônica de baixo grau é silenciosa mas real — mede-se no sangue e é tratável. Perder peso reduz ativamente essa inflamação.'],
+ exames:[
+  {exam:'PCR ultrassensível (PCR-us)',indicacao:'Confirmar e quantificar inflamação sistêmica; >3 mg/L = alto risco CV',urgencia:'breve',ref:'ERFC 2010 JAMA'},
+  {exam:'Hemograma completo + VHS',indicacao:'Leucocitose e VHS elevado sugerem inflamação ativa',urgencia:'breve',ref:''},
+  {exam:'Ácido úrico',indicacao:'Elevado na obesidade/SM; preditor independente de DCV',urgencia:'eletiva',ref:''},
+  {exam:'Adiponectina',indicacao:'Reduzida na obesidade visceral; inversamente correlacionada ao risco CV',urgencia:'eletiva',ref:'ERFC 2010'},
+ ]},
+{id:'n1_depressao',nivel:'N1',nome:'Triagem de depressão (PHQ-2/9)',dominio:'Saúde mental',ref:'Kroenke & Spitzer 2001; AUC=0,95',alertMental:true,
+ vars:[{id:'phq9',p:45},{id:'phq2',p:25},{id:'diag_mental',p:20},{id:'medic_psiq',p:10}],
+ medSugest:['PHQ-2≥3: aplicar PHQ-9 completo. PHQ-9≥10: encaminhar psiquiatria ou iniciar antidepressivo.','Verificar interações com GLP-1: dados emergentes de melhora do PHQ-9 com semaglutida (Mansur 2023).'],
+ patSugest:['A saúde mental é parte integral da saúde física. Tratar a depressão facilita perder peso e dormir melhor.'],
+ exames:[
+  {exam:'PHQ-9 completo',indicacao:'PHQ-2 positivo exige confirmação com escala completa (≥10 = depressão moderada)',urgencia:'consulta',ref:'Kroenke 2001'},
+  {exam:'TSH + T4 livre',indicacao:'Hipotireoidismo como causa orgânica de depressão',urgencia:'breve',ref:'ATA 2014'},
+  {exam:'Vitamina D + B12',indicacao:'Deficiência associada a humor deprimido e fadiga',urgencia:'breve',ref:''},
+  {exam:'Encaminhar psiquiatria',indicacao:'PHQ-9 ≥ 10 ou ideação suicida presente',urgencia:'urgente',ref:'NCCN 2024'},
+ ]},
+{id:'n1_ansiedade',nivel:'N1',nome:'Triagem de ansiedade (GAD-7)',dominio:'Saúde mental',ref:'Spitzer 2006; AUC=0,91',alertMental:true,
+ vars:[{id:'gad7',p:60},{id:'estresse_percebido',p:25},{id:'diag_mental',p:15}],
+ medSugest:['GAD-7≥10: encaminhar avaliação psiquiátrica. ISRS têm perfil metabólico favorável em obesos.','Avaliar se ansiedade está dirigindo comportamentos alimentares.'],
+ patSugest:['Ansiedade e excesso de peso se influenciam mutuamente. Tratar a ansiedade frequentemente facilita o processo de emagrecimento.'],
+ exames:[
+  {exam:'GAD-7 completo',indicacao:'Confirmar e graduar ansiedade generalizada (≥10 = moderada-grave)',urgencia:'consulta',ref:'Spitzer 2006'},
+  {exam:'TSH (excluir tireotoxicose)',indicacao:'Hipertireoidismo mimetiza transtorno de ansiedade',urgencia:'breve',ref:'ATA 2014'},
+  {exam:'ECG de repouso',indicacao:'Excluir arritmia como causa de palpitações/ansiedade',urgencia:'eletiva',ref:''},
+ ]},
+{id:'n1_sono',nivel:'N1',nome:'Qualidade do sono e apneia',dominio:'Sono',ref:'AASM 2015; ISI AUC=0,87',alertMental:false,
+ vars:[{id:'apneia',p:30},{id:'sono_qualidade',p:28},{id:'sono_horas',p:22},{id:'sonolencia',p:12},{id:'ritmo_circadiano',p:8}],
+ medSugest:['SAOS: oximetria noturna domiciliar como triagem. Insônia: CBTI (TCC para insônia) é primeira linha.','<6h/noite + obesidade: tratar o sono pode potencializar a perda de peso.'],
+ patSugest:['Dormir mal interfere diretamente no peso. Se você ronca muito ou acorda cansado, pode ter apneia do sono — muito tratável.'],
+ exames:[
+  {exam:'Oximetria noturna domiciliar',indicacao:'Triagem de SAOS — se IAH estimado ≥ 5, confirmar com polissonografia',urgencia:'breve',ref:'AASM 2015'},
+  {exam:'Polissonografia (PSG)',indicacao:'Confirmar e graduar SAOS; indicada se oximetria positiva ou suspeita alta',urgencia:'breve',ref:'AASM 2015'},
+  {exam:'Escala de Epworth',indicacao:'Quantificar sonolência diurna excessiva',urgencia:'consulta',ref:'Johns 1991'},
+ ]},
+{id:'n1_elegib_glp1',nivel:'N1',nome:'Elegibilidade farmacológica (GLP-1)',dominio:'Farmacologia',ref:'FDA 2021/2022; STEP 1 -14,9%; SURMOUNT-1 -20,9%',alertMental:false,
+ vars:[{id:'imc',p:30},{id:'gi_gastroparesia',p:25},{id:'hist_familiar_prostata',p:15},{id:'diag_mental',p:15},{id:'glp1_historico',p:15}],
+ medSugest:['Critérios: IMC ≥30 OU ≥27 + comorbidade. Verificar contraindicações: CMT, NEM-2, pancreatite, gastroparesia.','Titulação: 0,25mg/sem ×4 → escalonar. Manejo de náusea: refeições pequenas e fracionadas.'],
+ patSugest:['Medicamentos modernos para perda de peso trabalham reduzindo o apetite de forma natural. Seu médico vai verificar se não há contraindicações.'],
+ exames:[
+  {exam:'HbA1c + glicemia em jejum',indicacao:'Baseline antes de iniciar GLP-1 (STEP 1 exige)',urgencia:'breve',ref:'FDA 2021'},
+  {exam:'TGO + TGP + lipase',indicacao:'Baseline hepático e pancreático — contraindicação relativa se alterados',urgencia:'breve',ref:'ABESO 2022'},
+  {exam:'Calcitonina sérica',indicacao:'Contraindicação absoluta de GLP-1 se CMT suspeito (calcitonina elevada)',urgencia:'breve',ref:'FDA 2021'},
+  {exam:'ECG de repouso',indicacao:'Baseline cardiovascular antes de iniciar GLP-1',urgencia:'eletiva',ref:''},
+ ]},
+{id:'n1_prostata',nivel:'N1',nome:'Risco de câncer de próstata',dominio:'Oncologia',ref:'Ross 2007; AUC=0,766',alertMental:false,
+ vars:[{id:'psa',p:35},{id:'psa_livre',p:20},{id:'idade',p:18},{id:'hist_familiar_prostata',p:15},{id:'dre',p:7},{id:'sint_urinarios',p:5}],
+ medSugest:['PSA >4 ng/mL ou >2,5 ng/mL em <60 anos: encaminhar urologista.','Rastreamento a partir dos 50 anos (45 com história familiar). INCA 2020: decisão compartilhada.'],
+ patSugest:['Um exame de sangue simples (PSA) rastreia câncer de próstata na fase mais tratável. PSA elevado não significa câncer — tem muitas causas benignas.'],
+ exames:[
+  {exam:'PSA total + PSA livre',indicacao:'Rastreamento CaP; PSA livre/total <15% aumenta suspeita de malignidade',urgencia:'breve',ref:'Ross 2007; INCA 2020'},
+  {exam:'Toque retal (DRE)',indicacao:'Nódulo ou assimetria ao toque — indica biópsia mesmo com PSA normal',urgencia:'consulta',ref:'AUA 2023'},
+  {exam:'USG próstata transretal',indicacao:'PSA >4 ng/mL ou DRE alterado — orientar biópsia dirigida',urgencia:'breve',ref:'AUA 2023'},
+ ]},
+{id:'n1_cancer_crc',nivel:'N1',nome:'Risco de câncer colorretal (LiFeCRC)',dominio:'Oncologia',ref:'LiFeCRC AUC=0,77; Kurth 2007 OR=15,29',alertMental:false,
+ vars:[{id:'idade',p:28},{id:'hist_familiar_crc',p:20},{id:'imc',p:15},{id:'alcool',p:12},{id:'tabagismo',p:10},{id:'dieta_vermelha',p:8},{id:'atv_fisica',p:5},{id:'sangue_fezes',p:2}],
+ medSugest:['Colonoscopia precoce (<45 anos) se ≥2 fatores de risco (hist. familiar, obesidade, tabagismo, FIT+).','FIT a cada 2 anos a partir dos 45 anos. Positivo = colonoscopia urgente em até 30 dias.'],
+ patSugest:['Câncer de intestino é um dos mais preveníveis. A colonoscopia detecta pólipos antes que virem câncer.'],
+ exames:[
+  {exam:'FIT — teste imunoquímico de sangue oculto nas fezes',indicacao:'Rastreamento CRC; positivo = colonoscopia em até 30 dias',urgencia:'breve',ref:'INCA 2021; LiFeCRC'},
+  {exam:'Colonoscopia',indicacao:'Risco alto (≥2 FR) ou ≥45 anos; detecta e remove pólipos preventivamente',urgencia:'eletiva',ref:'ACG 2021'},
+  {exam:'CEA basal',indicacao:'Marcador pré-operatório; sem papel no rastreamento, mas útil como baseline',urgencia:'eletiva',ref:'ASCO 2020'},
+ ]},
+{id:'n1_distress_onco',nivel:'N1',nome:'Distress oncológico (NCCN DT)',dominio:'Saúde mental',ref:'Mitchell 2007; DT≥4: Sens 77–82%',alertMental:true,
+ vars:[{id:'distress_onco',p:40},{id:'phq9',p:25},{id:'medo_recorrencia',p:20},{id:'suporte_social',p:15}],
+ medSugest:['DT≥4: encaminhar psico-oncologia. PHQ-9≥10: iniciar antidepressivo ou TCC.','Rastreamento sistemático: DT + PHQ-2 em toda consulta oncológica (NCCN Guidelines nível 1A).'],
+ patSugest:['Tratar a mente durante o tratamento do câncer não é luxo — é parte essencial do tratamento.'],
+ exames:[
+  {exam:'Escala de Distress (NCCN DT)',indicacao:'DT ≥ 4 = distress clinicamente significativo',urgencia:'consulta',ref:'NCCN 2024'},
+  {exam:'PHQ-9',indicacao:'PHQ-9 ≥10 em oncológico = indicação de tratamento',urgencia:'consulta',ref:'NCCN 2024'},
+  {exam:'Encaminhar psico-oncologia',indicacao:'DT ≥ 4 ou PHQ-9 ≥ 10 — impacta sobrevida',urgencia:'urgente',ref:'van Tuijl 2023'},
+ ]},
+{id:'n1_qualidade_vida',nivel:'N1',nome:'Qualidade de vida (SF-12/36)',dominio:'Bem-estar',ref:'Kolotkin 2017 (k=89)',alertMental:false,
+ vars:[{id:'qualidade_vida',p:45},{id:'funcao_sexual',p:25},{id:'sono_qualidade',p:15},{id:'atv_fisica',p:10},{id:'estresse_percebido',p:5}],
+ medSugest:['SF-36/SF-12 como outcome primário: mais sensível a mudanças percebidas.','Disfunção erétil em obeso: frequentemente resolve com perda de peso + tratamento da SM.'],
+ patSugest:['A qualidade de vida é o objetivo final de qualquer tratamento.'],
+ exames:[
+  {exam:'SF-12 ou WHOQOL-BREF (questionário)',indicacao:'Quantificar qualidade de vida como outcome de follow-up',urgencia:'consulta',ref:'Kolotkin 2017'},
+  {exam:'IIEF-5 (função erétil)',indicacao:'Disfunção erétil como marcador de saúde vascular e hormonal',urgencia:'consulta',ref:'Rosen 1997'},
+  {exam:'Testosterona total + LH + FSH',indicacao:'DE + obesidade + fadiga: excluir hipogonadismo',urgencia:'eletiva',ref:'EAU 2023'},
+ ]},
+{id:'n1_hiperinsulinemia_cancer',nivel:'N1',nome:'Hiperinsulinemia e risco oncológico',dominio:'Oncologia',ref:'IARC meta-análise 2024 (n=797.193)',alertMental:false,
+ vars:[{id:'imc',p:22},{id:'insulina',p:20},{id:'glicemia',p:18},{id:'pcr_alta',p:15},{id:'triglicerides',p:12},{id:'igf1',p:8},{id:'adiponectina',p:5}],
+ medSugest:['Solicitar PCR-us, insulina em jejum, IGF-1, adiponectina — perfil de risco oncológico metabólico.','GLP-1: associado a redução de risco em 10/13 cânceres relacionados à obesidade.'],
+ patSugest:['A combinação de excesso de peso e metabolismo desregulado aumenta o risco de vários cânceres. Tratar o metabolismo agora pode reduzir ativamente esse risco futuro.'],
+ exames:[
+  {exam:'Insulina em jejum + HOMA-IR',indicacao:'Hiperinsulinemia ativa vias de proliferação celular (mTOR/IGF-1R)',urgencia:'breve',ref:'IARC 2024'},
+  {exam:'IGF-1 sérico',indicacao:'Elevado em 40% dos obesos; promove mitogênese em tecido mamário, colônico e prostático',urgencia:'breve',ref:'IARC 2024'},
+  {exam:'PCR ultrassensível + adiponectina',indicacao:'Inflamação + hipoadiponectinemia = fenótipo de risco oncológico metabólico',urgencia:'breve',ref:'IARC 2024'},
+ ]},
+{id:'n1_burnout',nivel:'N1',nome:'Burnout ocupacional (fenotipagem)',dominio:'Saúde mental',ref:'Barac 2024 JMIR; Sens 71–83%',alertMental:true,
+ vars:[{id:'hrv',p:35},{id:'sono_wearable',p:25},{id:'passos_dia',p:15},{id:'uso_noturno',p:12},{id:'ritmo_circadiano',p:8}],
+ medSugest:['HRV reduzida + sono degradado cronicamente: avaliar burnout com MBI.','Burnout impacta diretamente o metabolismo: cortisol crônico eleva glicemia, PA e gordura visceral.'],
+ patSugest:['Seu corpo está enviando sinais de que está sobrecarregado. Isso não é fraqueza — é dado biológico.'],
+ exames:[
+  {exam:'Cortisol matutino (8h)',indicacao:'Eixo HPA cronicamente ativado no burnout; cortisol elevado ou achatado',urgencia:'breve',ref:'Barac 2024'},
+  {exam:'Hemograma + TSH',indicacao:'Excluir causas orgânicas de fadiga e exaustão',urgencia:'breve',ref:''},
+  {exam:'MBI (Maslach Burnout Inventory)',indicacao:'Confirmar e graduar burnout clinicamente',urgencia:'consulta',ref:'Maslach 1981'},
+ ]},
+];
+
+const N2=[
+{id:'n2_sindrome_met',nivel:'N2',nome:'Síndrome metabólica integrada',dominio:'Metabolismo',ref:'Alberti 2009; AUC=0,82 para DCV 10 anos',alertMental:false,
+ needs:['n1_cardio','n1_dm2','n1_sindrome_met_vars','n1_obesidade'],pesos:{n1_cardio:0.30,n1_dm2:0.28,n1_sindrome_met_vars:0.25,n1_obesidade:0.17},min:2,
+ medSugest:['Solicitar perfil metabólico completo: glicemia, HbA1c, perfil lipídico, insulina, PCR-us.','Avaliar testosterona total: SM associada a hipogonadismo em 40–50% dos casos.'],
+ patSugest:['Você tem múltiplos fatores de risco metabólico que se somam. Perder 5–10% do peso pode reverter vários desses fatores simultaneamente.'],
+ exames:[
+  {exam:'Glicemia + HbA1c + insulina + HOMA-IR',indicacao:'Perfil glicometabólico completo da SM',urgencia:'breve',ref:'Alberti 2009'},
+  {exam:'Lipidograma completo',indicacao:'TG, HDL, LDL, CT — critérios e estratificação de risco',urgencia:'breve',ref:'SBC 2022'},
+  {exam:'PCR ultrassensível',indicacao:'SM duplica o PCR — marcador de risco CV residual',urgencia:'eletiva',ref:'ERFC 2010'},
+  {exam:'Testosterona total + LH',indicacao:'SM associada a hipogonadismo em 40–50% dos casos',urgencia:'eletiva',ref:'EAU 2023'},
+  {exam:'USG abdominal',indicacao:'Esteatose hepática não alcoólica — presente em 70% da SM',urgencia:'eletiva',ref:'EASL 2023'},
+ ]},
+{id:'n2_saude_mental_peso',nivel:'N2',nome:'Saúde mental e emagrecimento',dominio:'Psicossomático',ref:'Luppino 2010 (n=55.387); OR=1,55',alertMental:true,
+ needs:['n1_depressao','n1_obesidade','n1_sono','n1_ansiedade'],pesos:{n1_depressao:0.35,n1_obesidade:0.30,n1_sono:0.20,n1_ansiedade:0.15},min:2,
+ medSugest:['Tratar depressão e obesidade em paralelo — não sequencialmente (Lancet Psychiatry 2025).','Avaliar se medicação psiquiátrica atual causa ganho de peso.'],
+ patSugest:['Saúde mental e peso corporal se influenciam mutuamente. Cuidar de um tende a melhorar o outro.'],
+ exames:[
+  {exam:'PHQ-9 + GAD-7',indicacao:'Graduar depressão e ansiedade como comórbidas à obesidade',urgencia:'consulta',ref:'Luppino 2010'},
+  {exam:'TSH + T4 livre + Vitamina D + B12',indicacao:'Causas orgânicas de depressão e ganho de peso',urgencia:'breve',ref:'ATA 2014'},
+  {exam:'Cortisol matutino',indicacao:'Hipercortisolismo (Cushing) como causa conjunta de obesidade e humor',urgencia:'eletiva',ref:''},
+ ]},
+{id:'n2_risco_cardiomet',nivel:'N2',nome:'Risco cardiometabólico integrado',dominio:'Cardiovascular',ref:'GBD 2019; AUC=0,78–0,84',alertMental:false,
+ needs:['n1_cardio','n2_sindrome_met','n1_dm2'],pesos:{n1_cardio:0.40,n2_sindrome_met:0.35,n1_dm2:0.25},min:2,
+ medSugest:['Calcular Escore de Risco Global completo após obter PA, colesterol, glicemia.','Estatinas: LDL elevado + risco CV >10% em 10 anos.'],
+ patSugest:['Seu conjunto de fatores pede atenção ao coração. Isso não é alarme — é oportunidade de agir.'],
+ exames:[
+  {exam:'Escore de Risco Global (SBC/AHA)',indicacao:'Calcular risco de eventos CV em 10 anos — decisão de estatina',urgencia:'consulta',ref:'SBC 2022'},
+  {exam:'Teste ergométrico',indicacao:'Isquemia silenciosa em risco intermediário-alto',urgencia:'eletiva',ref:'SBC 2022'},
+  {exam:'Ecocardiograma',indicacao:'Avaliar função ventricular e HVE em hipertensão ou risco alto',urgencia:'eletiva',ref:'SBC 2022'},
+  {exam:'Angiotomografia coronária (score de cálcio)',indicacao:'Reclassificação de risco CV intermediário',urgencia:'eletiva',ref:'ACC/AHA 2019'},
+ ]},
+{id:'n2_elegib_completa',nivel:'N2',nome:'Elegibilidade integrada para GLP-1',dominio:'Farmacologia',ref:'STEP 1 -14,9%; SURMOUNT-1 -20,9%',alertMental:false,
+ needs:['n1_elegib_glp1','n1_obesidade','n1_depressao','n1_sono'],pesos:{n1_elegib_glp1:0.40,n1_obesidade:0.35,n1_depressao:0.15,n1_sono:0.10},min:2,
+ medSugest:['Verificar contraindicações absolutas: CMT, NEM-2, pancreatite, gastroparesia.','Titulação lenta reduz náusea e melhora adesão.'],
+ patSugest:['Medicamentos modernos para perda de peso podem ser uma opção importante para você.'],
+ exames:[
+  {exam:'HbA1c + lipase + TGO/TGP',indicacao:'Baseline obrigatório antes de iniciar GLP-1',urgencia:'breve',ref:'ABESO 2022; FDA'},
+  {exam:'Calcitonina + USG tireoide',indicacao:'Excluir CMT — contraindicação absoluta ao GLP-1',urgencia:'breve',ref:'FDA 2021'},
+  {exam:'Encaminhar endocrinologia',indicacao:'Titulação e monitoramento de GLP-1 com especialista',urgencia:'breve',ref:'ABESO 2022'},
+ ]},
+{id:'n2_sono_mental',nivel:'N2',nome:'Sono e saúde mental integrados',dominio:'Psicossomático',ref:'Baglioni 2016; OR=2,10 insônia→depressão',alertMental:true,
+ needs:['n1_depressao','n1_sono','n1_ansiedade','n1_burnout'],pesos:{n1_depressao:0.35,n1_sono:0.30,n1_ansiedade:0.20,n1_burnout:0.15},min:2,
+ medSugest:['Insônia + PHQ-9 positivo: CBTI simultâneo ao tratamento da depressão.','Avaliar SAOS: apneia não tratada amplifica depressão (OR=2,1).'],
+ patSugest:['Dormir mal e sentir-se para baixo caminham juntos e se alimentam mutuamente.'],
+ exames:[
+  {exam:'Polissonografia domiciliar',indicacao:'SAOS não tratada amplifica depressão (OR=2,1); diagnóstico é mandatório',urgencia:'breve',ref:'Baglioni 2016; AASM 2015'},
+  {exam:'PHQ-9 + GAD-7 + ISI',indicacao:'Graduar depressão, ansiedade e insônia como um conjunto integrado',urgencia:'consulta',ref:'Baglioni 2016'},
+ ]},
+{id:'n2_obesidade_cancer',nivel:'N2',nome:'Obesidade metabólica e risco oncológico',dominio:'Oncologia',ref:'IARC 2024 (n=797.193); SRR=1,42',alertMental:false,
+ needs:['n1_hiperinsulinemia_cancer','n1_inflamacao_cronica','n1_sindrome_met_vars','n1_obesidade'],pesos:{n1_hiperinsulinemia_cancer:0.35,n1_inflamacao_cronica:0.30,n1_sindrome_met_vars:0.20,n1_obesidade:0.15},min:2,
+ medSugest:['Solicitar PCR-us, insulina em jejum, IGF-1, adiponectina.','Colonoscopia precoce: IMC >30 + hist. familiar CRC + idade >45 anos.'],
+ patSugest:['A combinação de excesso de peso e metabolismo desregulado aumenta o risco de vários tipos de câncer.'],
+ exames:[
+  {exam:'PCR-us + insulina + IGF-1',indicacao:'Perfil inflamatório-metabólico de risco oncológico — IARC 2024',urgencia:'breve',ref:'IARC 2024'},
+  {exam:'FIT (sangue oculto nas fezes)',indicacao:'Obesidade é fator de risco independente para CRC',urgencia:'breve',ref:'IARC 2024'},
+  {exam:'Colonoscopia precoce',indicacao:'IMC >30 + idade ≥ 40 anos — indicação de rastreamento antecipado',urgencia:'eletiva',ref:'ACG 2021'},
+ ]},
+{id:'n2_depressao_cancer',nivel:'N2',nome:'Depressão, ansiedade e prognóstico oncológico',dominio:'Psico-oncologia',ref:'van Tuijl 2023; +23–83% mortalidade oncológica',alertMental:true,
+ needs:['n1_distress_onco','n1_depressao','n1_ansiedade','n1_qualidade_vida'],pesos:{n1_distress_onco:0.35,n1_depressao:0.30,n1_ansiedade:0.20,n1_qualidade_vida:0.15},min:2,
+ medSugest:['PHQ-9≥10 ou DT≥4: encaminhar psico-oncologia urgentemente.','Preferir sertralina/escitalopram — menor interação com quimioterápicos.'],
+ patSugest:['Tratar a mente durante o tratamento do câncer não é luxo — é parte essencial.'],
+ exames:[
+  {exam:'PHQ-9 + Escala de Distress (DT)',indicacao:'Depressão em oncológico aumenta mortalidade em 23–83% (van Tuijl 2023)',urgencia:'consulta',ref:'van Tuijl 2023'},
+  {exam:'Encaminhar psico-oncologia',indicacao:'Urgente: PHQ-9 ≥ 10 ou DT ≥ 4 em paciente oncológico',urgencia:'urgente',ref:'NCCN 2024'},
+ ]},
+{id:'n2_cancer_crc_integrado',nivel:'N2',nome:'Risco integrado de câncer colorretal',dominio:'Oncologia',ref:'LiFeCRC AUC=0,77; Kurth OR=15,29',alertMental:false,
+ needs:['n1_cancer_crc','n1_hiperinsulinemia_cancer','n1_inflamacao_cronica','n2_sindrome_met'],pesos:{n1_cancer_crc:0.40,n1_hiperinsulinemia_cancer:0.25,n1_inflamacao_cronica:0.20,n2_sindrome_met:0.15},min:2,
+ medSugest:['Colonoscopia precoce (<45 anos) se ≥2 fatores de risco.','FIT a cada 2 anos: Sens 79%, Spec 94% para CRC.'],
+ patSugest:['Câncer de intestino é um dos mais preveníveis. A colonoscopia detecta pólipos antes que virem câncer.'],
+ exames:[
+  {exam:'Colonoscopia (antecipada se < 45a)',indicacao:'≥2 fatores de risco metabólico + história familiar — LiFeCRC score alto',urgencia:'breve',ref:'LiFeCRC; ACG 2021'},
+  {exam:'FIT a cada 2 anos',indicacao:'Sens 79%, Spec 94% para CRC — manutenção do rastreamento',urgencia:'eletiva',ref:'INCA 2021'},
+ ]},
+{id:'n2_psicossomatico_integrado',nivel:'N2',nome:'Saúde psicossomática integrada',dominio:'Psicossomático',ref:'Lancet Psychiatry 2025; AOR=3,77',alertMental:true,
+ needs:['n2_saude_mental_peso','n2_sono_mental','n1_qualidade_vida','n1_inflamacao_cronica'],pesos:{n2_saude_mental_peso:0.40,n2_sono_mental:0.25,n1_qualidade_vida:0.20,n1_inflamacao_cronica:0.15},min:2,
+ medSugest:['Tratar depressão e obesidade em paralelo. Mecanismos compartilhados: IL-6/PCR, eixo HPA, disbiose intestinal.','Dieta anti-inflamatória (mediterrânea): melhora sintomas depressivos E perfil metabólico.'],
+ patSugest:['Corpo e mente se influenciam profundamente. O que acontece no metabolismo afeta o humor — e vice-versa.'],
+ exames:[
+  {exam:'PHQ-9 + GAD-7 + PCR-us',indicacao:'Tríade psicossomática — inflamação como mecanismo compartilhado',urgencia:'breve',ref:'Lancet Psychiatry 2025'},
+  {exam:'Cortisol matutino',indicacao:'Eixo HPA cronicamente ativado em psicossomática — hipercortisolismo subclínico',urgencia:'breve',ref:''},
+  {exam:'Encaminhar psiquiatria',indicacao:'Quadro integrado mente-metabolismo exige avaliação especializada',urgencia:'breve',ref:'Lancet Psychiatry 2025'},
+ ]},
+];
+
+const N3=[
+{id:'n3_saude_masc_360',nivel:'N3',nome:'Perfil de saúde masculina 360°',dominio:'Meta-inferência',ref:'WHO NCD Action Plan 2030; Look AHEAD NEJM 2012',alertMental:false,
+ needs:['n2_sindrome_met','n2_saude_mental_peso','n2_risco_cardiomet','n2_elegib_completa','n2_sono_mental'],pesos:{n2_sindrome_met:0.28,n2_saude_mental_peso:0.25,n2_risco_cardiomet:0.22,n2_elegib_completa:0.15,n2_sono_mental:0.10},min:2,
+ medSugest:['Priorização: (1) contraindicações GLP-1, (2) risco CV imediato, (3) saúde mental, (4) sono.','Monitoramento trimestral: HbA1c + PHQ-9 + ISI + lipídios + PA + peso.'],
+ patSugest:['Com todas essas informações, seu médico tem uma visão muito completa da sua saúde para criar um plano personalizado.'],
+ exames:[
+  {exam:'Painel metabólico completo (HbA1c + lipidograma + insulina + PCR-us)',indicacao:'Monitoramento trimestral do paciente com perfil 360°',urgencia:'breve',ref:'WHO NCD 2030'},
+  {exam:'PHQ-9 + ISI + PA + peso',indicacao:'Outcomes primários de follow-up multidimensional',urgencia:'consulta',ref:'Look AHEAD 2012'},
+  {exam:'Consulta multiprofissional (endocrino + psiquiatria + nutri)',indicacao:'Perfil complexo exige equipe integrada para desfechos sustentados',urgencia:'eletiva',ref:'Look AHEAD NEJM 2012'},
+ ]},
+{id:'n3_risco_oncologico_integrado',nivel:'N3',nome:'Risco oncológico integrado',dominio:'Oncologia / Meta-inferência',ref:'IARC 2020; NCI 2024; C-index=0,718',alertMental:false,
+ needs:['n2_obesidade_cancer','n2_cancer_crc_integrado','n1_prostata','n1_hiperinsulinemia_cancer','n2_depressao_cancer'],pesos:{n2_obesidade_cancer:0.30,n2_cancer_crc_integrado:0.28,n1_prostata:0.20,n1_hiperinsulinemia_cancer:0.14,n2_depressao_cancer:0.08},min:2,
+ medSugest:['Rastreamento: (1) FIT/colonoscopia >45a; (2) PSA >50a ou hist. familiar; (3) marcadores metabólicos.','GLP-1: redução de risco em 10/13 cânceres relacionados à obesidade.'],
+ patSugest:['O seu perfil metabólico coloca você num grupo que se beneficia muito do rastreamento preventivo de câncer.'],
+ exames:[
+  {exam:'FIT + colonoscopia (se nunca feita ou ≥ 45a)',indicacao:'Rastreamento integrado CRC — C-index=0,718 no LiFeCRC',urgencia:'breve',ref:'IARC 2020; ACG 2021'},
+  {exam:'PSA total + toque retal (≥ 45-50a)',indicacao:'Rastreamento CaP — decisão compartilhada médico-paciente',urgencia:'breve',ref:'INCA 2020; AUA 2023'},
+  {exam:'Insulina + IGF-1 + PCR-us',indicacao:'Perfil metabólico-inflamatório de risco oncológico — IARC 2024',urgencia:'breve',ref:'IARC 2024'},
+ ]},
+{id:'n3_carga_doenca_mental_metabolica',nivel:'N3',nome:'Carga de doença mental-metabólica integrada',dominio:'Psicossomático / Meta-inferência',ref:'GBD 2019; Lancet Psychiatry 2025; AOR=3,77',alertMental:true,
+ needs:['n2_psicossomatico_integrado','n2_sindrome_met','n2_sono_mental','n1_qualidade_vida','n2_elegib_completa'],pesos:{n2_psicossomatico_integrado:0.32,n2_sindrome_met:0.25,n2_sono_mental:0.18,n1_qualidade_vida:0.15,n2_elegib_completa:0.10},min:3,
+ medSugest:['Sequência: (1) estabilizar sono (CBTI+SAOS) → (2) tratar depressão → (3) otimizar metabolismo → (4) GLP-1.','Equipe multiprofissional: endocrinologista + psiquiatra + nutricionista + educador físico.'],
+ patSugest:['Seu corpo e sua mente precisam ser cuidados juntos. Tratar ambos em paralelo é o caminho mais eficaz.'],
+ exames:[
+  {exam:'PHQ-9 + GAD-7 + HbA1c + lipidograma + PCR-us',indicacao:'Painel completo da carga mental-metabólica — GBD 2019',urgencia:'urgente',ref:'GBD 2019; Lancet Psychiatry 2025'},
+  {exam:'Polissonografia + cortisol matutino',indicacao:'SAOS e eixo HPA — mecanismos centrais do quadro',urgencia:'breve',ref:''},
+  {exam:'Encaminhar psiquiatria + endocrinologia',indicacao:'Carga mental-metabólica grave exige tratamento especializado paralelo',urgencia:'urgente',ref:'Lancet Psychiatry 2025'},
+ ]},
+{id:'n3_viabilidade_terapeutica',nivel:'N3',nome:'Viabilidade terapêutica global',dominio:'Meta-inferência',ref:'Look AHEAD NEJM 2012 (n=5.145)',alertMental:false,
+ needs:['n2_elegib_completa','n2_risco_cardiomet','n2_sindrome_met','n1_sono','n1_qualidade_vida'],pesos:{n2_elegib_completa:0.35,n2_risco_cardiomet:0.25,n2_sindrome_met:0.20,n1_sono:0.12,n1_qualidade_vida:0.08},min:2,
+ medSugest:['Definir prioridade terapêutica: risco CV imediato vs. elegibilidade GLP-1 vs. saúde mental.','Plano de monitoramento: 4 consultas no primeiro ano, trimestral depois.'],
+ patSugest:['Você tem um perfil onde um tratamento integrado faz muita diferença. O plano vai priorizar o que precisa de atenção primeiro.'],
+ exames:[
+  {exam:'HbA1c + PA + lipidograma + PHQ-9 + ISI + peso',indicacao:'Baseline para todas as intervenções terapêuticas planejadas',urgencia:'breve',ref:'Look AHEAD NEJM 2012'},
+  {exam:'Consulta multiprofissional',indicacao:'Viabilidade terapêutica global exige plano integrado com equipe',urgencia:'breve',ref:'Look AHEAD NEJM 2012'},
+ ]},
+];
+
+// ══════════════════════════════════════════════════════════════════
+//  DISEASE MAP  (inference id → possible conditions)
+// ══════════════════════════════════════════════════════════════════
+const DOENCAS_MAP={
+'n1_obesidade':[
+ {doenca:'Obesidade grau I–III',cid10:'E66',prob:'alta',raciocinio:'IMC ≥30 kg/m² — diagnóstico direto pela ABESO 2022'},
+ {doenca:'Doença hepática gordurosa (MASLD/NASH)',cid10:'K76.0',prob:'moderada',raciocinio:'Presente em 70% dos obesos; NASH em 20–30%'},
+ {doenca:'Síndrome metabólica',cid10:'E88.8',prob:'investigar',raciocinio:'Obesidade central é critério obrigatório (Alberti 2009)'},
+],
+'n1_dm2':[
+ {doenca:'Pré-diabetes (glicemia de jejum alterada / IGT)',cid10:'R73.0',prob:'alta',raciocinio:'Glicemia 100–125 mg/dL ou HbA1c 5,7–6,4% — SBD 2024'},
+ {doenca:'Diabetes mellitus tipo 2',cid10:'E11',prob:'moderada',raciocinio:'FINDRISC ≥12 eleva probabilidade; confirmar com glicemia + HbA1c'},
+ {doenca:'Resistência insulínica',cid10:'E88.8',prob:'alta',raciocinio:'Mecanismo fisiopatológico central no FINDRISC elevado'},
+],
+'n1_cardio':[
+ {doenca:'Hipertensão arterial sistêmica',cid10:'I10',prob:'alta',raciocinio:'PA sistólica ≥140 ou diastólica ≥90 mmHg — SBH 2020'},
+ {doenca:'Dislipidemia',cid10:'E78',prob:'moderada',raciocinio:'Colesterol total e/ou LDL elevados — componente Framingham'},
+ {doenca:'Doença arterial coronariana (pré-clínica)',cid10:'I25.1',prob:'investigar',raciocinio:'Risco Framingham elevado indica aterosclerose subclínica possível'},
+],
+'n1_sindrome_met_vars':[
+ {doenca:'Síndrome metabólica estabelecida',cid10:'E88.8',prob:'alta',raciocinio:'≥3 critérios de Alberti 2009 presentes no perfil'},
+ {doenca:'Dislipidemia mista (hipertrigliceridemia + HDL baixo)',cid10:'E78.2',prob:'alta',raciocinio:'TG ≥150 mg/dL e/ou HDL <40 mg/dL — critérios da SM'},
+ {doenca:'Hiperuricemia / gota',cid10:'E79.0',prob:'investigar',raciocinio:'SM associada a hiperuricemia em 30–50% dos casos'},
+],
+'n1_resistencia_insulinica':[
+ {doenca:'Resistência insulínica (HOMA-IR elevado)',cid10:'E88.8',prob:'alta',raciocinio:'HOMA-IR >2,5 = resistência insulínica — Matthews 1985'},
+ {doenca:'Pré-diabetes',cid10:'R73.0',prob:'moderada',raciocinio:'RI precede DM2 em anos — estado pré-clínico tratável'},
+ {doenca:'Hipogonadismo metabólico',cid10:'E29.1',prob:'investigar',raciocinio:'RI + obesidade associadas a queda de testosterona em 40–50%'},
+],
+'n1_inflamacao_cronica':[
+ {doenca:'Inflamação sistêmica crônica subclínica',cid10:'R70.0',prob:'alta',raciocinio:'PCR-us >1–3 mg/L persistente — ERFC 2010 JAMA'},
+ {doenca:'Doença hepática gordurosa inflamatória (NASH)',cid10:'K75.8',prob:'moderada',raciocinio:'PCR elevado em obeso com SM — NASH ativa em 20% dos casos'},
+ {doenca:'Aterosclerose subclínica',cid10:'I70',prob:'investigar',raciocinio:'PCR-us >3 mg/L duplica risco cardiovascular — ERFC 2010'},
+],
+'n1_depressao':[
+ {doenca:'Transtorno depressivo maior',cid10:'F32',prob:'alta',raciocinio:'PHQ-9 ≥10 tem Sens 88% / Spec 88% para TDM (Kroenke 2001)'},
+ {doenca:'Transtorno depressivo persistente (distimia)',cid10:'F34.1',prob:'moderada',raciocinio:'PHQ-9 moderado com duração longa sugere distimia'},
+ {doenca:'Hipotireoidismo (causa orgânica)',cid10:'E03.9',prob:'investigar',raciocinio:'Hipotireoidismo mimetiza depressão — excluir com TSH'},
+],
+'n1_ansiedade':[
+ {doenca:'Transtorno de ansiedade generalizada',cid10:'F41.1',prob:'alta',raciocinio:'GAD-7 ≥10: Sens 89% / Spec 82% para TAG (Spitzer 2006)'},
+ {doenca:'Transtorno de pânico',cid10:'F41.0',prob:'moderada',raciocinio:'TAG e pânico frequentemente coexistem (comorbidade em 50%)'},
+ {doenca:'Tireotoxicose (hipertireoidismo)',cid10:'E05',prob:'investigar',raciocinio:'Hipertireoidismo mimetiza TAG — excluir com TSH'},
+],
+'n1_sono':[
+ {doenca:'Apneia obstrutiva do sono (SAOS)',cid10:'G47.3',prob:'alta',raciocinio:'Ronco + sonolência diurna + obesidade: STOP-BANG elevado'},
+ {doenca:'Insônia crônica',cid10:'G47.0',prob:'moderada',raciocinio:'ISI elevado + sono não reparador — diagnóstico clínico'},
+ {doenca:'Síndrome das pernas inquietas',cid10:'G25.8',prob:'investigar',raciocinio:'Despertar noturno + sensação de desconforto nos membros'},
+],
+'n1_elegib_glp1':[
+ {doenca:'Obesidade com comorbidade cardiometabólica',cid10:'E66',prob:'alta',raciocinio:'IMC ≥27 + comorbidade = critério FDA/ABESO para GLP-1'},
+ {doenca:'Síndrome metabólica',cid10:'E88.8',prob:'moderada',raciocinio:'Perfil de elegibilidade GLP-1 sobrepõe SM em 70% dos casos'},
+],
+'n1_prostata':[
+ {doenca:'Hiperplasia benigna da próstata (HBP)',cid10:'N40',prob:'moderada',raciocinio:'Causa mais comum de PSA 2–10 ng/mL em >50 anos'},
+ {doenca:'Adenocarcinoma de próstata',cid10:'C61',prob:'investigar',raciocinio:'PSA elevado + DRE alterado: VPP 25–30% (AUA 2023)'},
+ {doenca:'Prostatite crônica',cid10:'N41.1',prob:'investigar',raciocinio:'PSA pode triplicar em prostatite — diagnóstico diferencial obrigatório'},
+],
+'n1_cancer_crc':[
+ {doenca:'Pólipo adenomatoso colorretal',cid10:'K63.5',prob:'moderada',raciocinio:'Principal precursor do CRC — presente em 30% dos >50a com FR'},
+ {doenca:'Neoplasia colorretal (CRC)',cid10:'C18',prob:'investigar',raciocinio:'LiFeCRC score elevado: risco de CRC em 10 anos aumentado'},
+ {doenca:'Doença inflamatória intestinal',cid10:'K50',prob:'investigar',raciocinio:'Sangue nas fezes ou dor abdominal recorrente — excluir DII'},
+],
+'n1_distress_onco':[
+ {doenca:'Transtorno de ajustamento',cid10:'F43.2',prob:'alta',raciocinio:'Distress Thermometer ≥4 — resposta ao diagnóstico/tratamento oncológico'},
+ {doenca:'Transtorno depressivo em contexto oncológico',cid10:'F32',prob:'moderada',raciocinio:'PHQ-9 ≥10 em oncológico = depressão major sobreponível'},
+ {doenca:'Síndrome de fadiga relacionada ao câncer',cid10:'R53',prob:'moderada',raciocinio:'Presente em 70–100% dos pacientes durante tratamento oncológico'},
+],
+'n1_qualidade_vida':[
+ {doenca:'Disfunção erétil',cid10:'N52',prob:'alta',raciocinio:'IIEF-5 alterado + obesidade + SM — DE como marcador vascular'},
+ {doenca:'Hipogonadismo funcional / tardio',cid10:'E29.1',prob:'moderada',raciocinio:'DE + fadiga + obesidade: testosterona reduzida em 30% dos obesos'},
+ {doenca:'Síndrome de fragilidade (pré-fragilidade)',cid10:'R54',prob:'investigar',raciocinio:'Qualidade de vida reduzida + sedentarismo + IMC extremo'},
+],
+'n1_hiperinsulinemia_cancer':[
+ {doenca:'Resistência insulínica com perfil oncogênico',cid10:'E88.8',prob:'alta',raciocinio:'Hiperinsulinemia ativa vias IGF-1R/mTOR em tecidos neoplásicos — IARC 2024'},
+ {doenca:'Risco aumentado de neoplasia colorretal',cid10:'C18',prob:'investigar',raciocinio:'Hiperinsulinemia aumenta risco CRC em 2,2x — IARC 2024'},
+ {doenca:'Risco aumentado de hepatocarcinoma',cid10:'C22',prob:'investigar',raciocinio:'NASH → cirrose → CHC: via metabólica em obesos com RI'},
+],
+'n1_burnout':[
+ {doenca:'Síndrome de burnout',cid10:'Z73.0',prob:'alta',raciocinio:'HRV reduzida + sono degradado + sedentarismo — fenotipagem digital (Barac 2024)'},
+ {doenca:'Transtorno de adaptação por estresse laboral',cid10:'F43.2',prob:'moderada',raciocinio:'Burnout e transtorno de adaptação têm sobreposição de 60%'},
+ {doenca:'Síndrome de fadiga crônica',cid10:'G93.3',prob:'investigar',raciocinio:'Burnout grave com >6 meses pode evoluir para fadiga crônica'},
+],
+'n2_sindrome_met':[
+ {doenca:'Síndrome metabólica estabelecida (≥3 critérios)',cid10:'E88.8',prob:'alta',raciocinio:'Confluência de N1 metabólicos: cardio + DM2 + SM vars + obesidade'},
+ {doenca:'MASLD/NASH (esteato-hepatite metabólica)',cid10:'K75.8',prob:'alta',raciocinio:'Presente em 70% da SM estabelecida — progressão para cirrose em 20%'},
+ {doenca:'Diabetes mellitus tipo 2',cid10:'E11',prob:'moderada',raciocinio:'SM × DM2: progressão média de 5–10 anos sem intervenção'},
+ {doenca:'Hipogonadismo metabólico tardio',cid10:'E29.1',prob:'investigar',raciocinio:'SM associada a hipogonadismo em 40–50% dos homens — investigar testosterona'},
+],
+'n2_saude_mental_peso':[
+ {doenca:'Depressão major + obesidade (comorbidade bidirecional)',cid10:'F32',prob:'alta',raciocinio:'OR=1,55 para depressão em obesos e vice-versa — Luppino 2010'},
+ {doenca:'Transtorno de compulsão alimentar periódica (TCAP)',cid10:'F50.8',prob:'moderada',raciocinio:'Presente em 30% dos obesos com depressão — BES >27'},
+ {doenca:'Hipotireoidismo',cid10:'E03.9',prob:'investigar',raciocinio:'Causa orgânica que explica simultaneamente ganho de peso e depressão'},
+],
+'n2_risco_cardiomet':[
+ {doenca:'Doença arterial coronariana (pré-clínica a estabelecida)',cid10:'I25',prob:'moderada',raciocinio:'Risco Framingham >20% em 10 anos — aterosclerose muito provável'},
+ {doenca:'Insuficiência cardíaca com fração de ejeção preservada (ICFEp)',cid10:'I50.3',prob:'investigar',raciocinio:'HAS + obesidade + DM2: ICFEp em 40% dos casos'},
+ {doenca:'Doença renal crônica (estágio inicial)',cid10:'N18',prob:'investigar',raciocinio:'HAS + DM2 são as 2 principais causas de DRC — rastrear com creatinina + proteinúria'},
+],
+'n2_elegib_completa':[
+ {doenca:'Obesidade grau II–III com comorbidades múltiplas',cid10:'E66',prob:'alta',raciocinio:'Elegibilidade completa para GLP-1 = obesidade + ≥1 comorbidade cardiometabólica'},
+ {doenca:'Síndrome metabólica com elegibilidade farmacológica',cid10:'E88.8',prob:'alta',raciocinio:'Perfil integrado indica intervenção farmacológica além do estilo de vida'},
+],
+'n2_sono_mental':[
+ {doenca:'SAOS + depressão major (comorbidade integrada)',cid10:'G47.3',prob:'alta',raciocinio:'SAOS não tratada amplifica depressão (OR=2,1) — Baglioni 2016'},
+ {doenca:'Insônia crônica + TAG',cid10:'G47.0',prob:'moderada',raciocinio:'Insônia e ansiedade generalizada têm comorbidade em 60% dos casos'},
+ {doenca:'Síndrome de apneia central',cid10:'G47.4',prob:'investigar',raciocinio:'Em pacientes com ICC ou opioide — forma central de apneia do sono'},
+],
+'n2_obesidade_cancer':[
+ {doenca:'Risco oncológico metabólico elevado (neoplasia colorretal)',cid10:'C18',prob:'investigar',raciocinio:'IARC 2024: obesidade + RI aumenta risco CRC em 42% (SRR=1,42)'},
+ {doenca:'Risco de hepatocarcinoma (via NASH → cirrose)',cid10:'C22',prob:'investigar',raciocinio:'NASH em obeso com PCR elevado: risco de CHC aumentado em 3x'},
+ {doenca:'Risco de neoplasia de esôfago / cárdia',cid10:'C15',prob:'investigar',raciocinio:'Obesidade central: DRGE → esôfago de Barrett → adenocarcinoma'},
+],
+'n2_depressao_cancer':[
+ {doenca:'Transtorno depressivo major em contexto oncológico',cid10:'F32',prob:'alta',raciocinio:'PHQ-9 ≥10 em oncológico aumenta mortalidade em 23–83% (van Tuijl 2023)'},
+ {doenca:'Síndrome de fadiga oncológica',cid10:'R53',prob:'alta',raciocinio:'Fadiga + depressão em oncológico: síndrome clínica de alta prevalência'},
+ {doenca:'Transtorno de ansiedade por doença grave (nosofobia)',cid10:'F41.3',prob:'investigar',raciocinio:'Medo de recorrência presente em 70% dos sobreviventes de câncer'},
+],
+'n2_cancer_crc_integrado':[
+ {doenca:'Neoplasia colorretal (CRC)',cid10:'C18',prob:'moderada',raciocinio:'Score LiFeCRC elevado + RI + inflamação: risco integrado alto'},
+ {doenca:'Pólipo adenomatoso avançado',cid10:'K63.5',prob:'moderada',raciocinio:'Precursor obrigatório do CRC — presente em 30% dos >50a de alto risco'},
+ {doenca:'Síndrome de Lynch (HNPCC)',cid10:'Z84.8',prob:'investigar',raciocinio:'Histórico familiar forte de CRC: investigar síndrome hereditária'},
+],
+'n2_psicossomatico_integrado':[
+ {doenca:'Síndrome psicossomática integrada (depressão + SM + SAOS)',cid10:'F45',prob:'alta',raciocinio:'AOR=3,77 para desfechos adversos combinados — Lancet Psychiatry 2025'},
+ {doenca:'Síndrome do intestino irritável (SII)',cid10:'K58',prob:'moderada',raciocinio:'PCR elevado + estresse crônico: disbiose intestinal e SII em 30%'},
+ {doenca:'Doença de Alzheimer (risco futuro)',cid10:'G30',prob:'investigar',raciocinio:'SM + depressão + SAOS: triplicam risco de demência — GBD 2019'},
+],
+'n3_saude_masc_360':[
+ {doenca:'Doença crônica não transmissível multissistêmica',cid10:'Z87.3',prob:'alta',raciocinio:'Perfil 360° indica carga multidimensional de DCNT: cardio + metabólica + mental'},
+ {doenca:'Síndrome cardiometabólica estabelecida',cid10:'E88.8',prob:'alta',raciocinio:'N3 360° ativa apenas quando múltiplas N2 cardiometabólicas estão presentes'},
+],
+'n3_risco_oncologico_integrado':[
+ {doenca:'Risco oncológico integrado elevado (múltiplos órgãos)',cid10:'Z80.9',prob:'investigar',raciocinio:'C-index=0,718 — risco combinado de neoplasia gastrointestinal + prostática'},
+ {doenca:'Neoplasia gastrointestinal (CRC / gástrica / esofágica)',cid10:'C26',prob:'investigar',raciocinio:'Obesidade + RI + inflamação: via metabólica em 10/13 cânceres — IARC 2020'},
+ {doenca:'Adenocarcinoma de próstata',cid10:'C61',prob:'investigar',raciocinio:'PSA + risco metabólico elevado: associação com hiperinsulinemia (IARC 2024)'},
+],
+'n3_carga_doenca_mental_metabolica':[
+ {doenca:'Tríade de alto risco: depressão + SM + SAOS',cid10:'F32',prob:'alta',raciocinio:'GBD 2019: tríade associada a AOR=3,77 para mortalidade prematura'},
+ {doenca:'Doença cardiovascular pré-clínica',cid10:'I25',prob:'moderada',raciocinio:'Carga mental-metabólica integrada: risco CV significativamente aumentado'},
+ {doenca:'Demência / deterioração cognitiva futura',cid10:'G30',prob:'investigar',raciocinio:'Depressão + SAOS + SM multiplicam risco de Alzheimer em 3–5x'},
+],
+'n3_viabilidade_terapeutica':[
+ {doenca:'Doença metabólica complexa com elegibilidade para intervenção intensiva',cid10:'E66',prob:'alta',raciocinio:'Viabilidade terapêutica global: Look AHEAD demonstrou reversão de SM com intervenção'},
+ {doenca:'Síndrome cardiometabólica + mental',cid10:'E88.8',prob:'alta',raciocinio:'Perfil elegível para tratamento multiprofissional intensivo'},
+],
+};
+
+// ══════════════════════════════════════════════════════════════════
+//  DEFINITION LOOKUP
+// ══════════════════════════════════════════════════════════════════
+function getDefById(id){return [...N1,...N2,...N3].find(m=>m.id===id);}
+
+// ══════════════════════════════════════════════════════════════════
+//  ENGINE CALCULATION
+// ══════════════════════════════════════════════════════════════════
+const estadoAtual = new Map();
+
+function calcCov(vars){
+  let sumW=0,sumWA=0,riskCount=0;
+  for(const v of vars){
+    const s=estadoAtual.get(v.id);
+    sumW+=v.p;
+    if(s){sumWA+=v.p*s.alpha;if(s.risco)riskCount++;}
+  }
+  if(!sumW) return {cov:0,informed:0,riskVars:0};
+  return{cov:sumWA/sumW,informed:vars.filter(v=>estadoAtual.has(v.id)).length,riskVars:riskCount};
+}
+
+function runEngine(){
+  const n1R={};
+  N1.forEach(m=>{const r=calcCov(m.vars);n1R[m.id]={...r,active:r.cov>0.05&&r.informed>=1};});
+  const n2R={};
+  N2.forEach(m=>{
+    const ready=m.needs.filter(nid=>n1R[nid]&&n1R[nid].active);
+    if(ready.length<(m.min||1)){n2R[m.id]={cov:0,informed:0,active:false};return;}
+    let sw=0,swa=0;
+    m.needs.forEach(nid=>{const w=m.pesos[nid]||0;sw+=w;if(n1R[nid]&&n1R[nid].active)swa+=w*(n1R[nid].cov||0);});
+    const cov=sw>0?swa/sw:0;
+    n2R[m.id]={cov,informed:ready.length,active:cov>0.05};
+  });
+  const allR={...n1R,...n2R};
+  const n3R={};
+  N3.forEach(m=>{
+    const ready=m.needs.filter(nid=>allR[nid]&&allR[nid].active);
+    if(ready.length<(m.min||1)){n3R[m.id]={cov:0,informed:0,active:false};return;}
+    let sw=0,swa=0;
+    m.needs.forEach(nid=>{const w=m.pesos[nid]||0;sw+=w;if(allR[nid]&&allR[nid].active)swa+=w*(allR[nid].cov||0);});
+    const cov=sw>0?swa/sw:0;
+    n3R[m.id]={cov,informed:ready.length,active:cov>0.05};
+  });
+  const results=[];
+  [...N1,...N2,...N3].forEach(m=>{
+    const r=(n1R[m.id]||n2R[m.id]||n3R[m.id]);
+    if(r&&r.active) results.push({...m,...r});
+  });
+  return results.sort((a,b)=>b.cov-a.cov);
+}
+
+function calcular(){
+  const results=runEngine();
+  if(!results.length){showToast('Nenhuma inferência ativada com os dados informados','error');return;}
+  currentResults=results;
+  renderResults(results);
+  document.getElementById('engine-results').style.display='';
+  document.getElementById('engine-empty').style.display='none';
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  APP STATE
+// ══════════════════════════════════════════════════════════════════
+let currentUser  = null;
+let selectedRole = null;
+let currentResults = [];
+let engineContext = null; // {patientId, patientName, recordToLoad}
+let currentPatientId = null;
+let currentPatientName = '';
+
+// ══════════════════════════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ══════════════════════════════════════════════════════════════════
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  WELCOME
+// ══════════════════════════════════════════════════════════════════
+function selectRole(role){
+  selectedRole=role;
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('role-'+role).classList.add('active');
+  document.getElementById('btn-next-role').disabled=false;
+}
+
+function goToAuth(){
+  if(!selectedRole) return;
+  document.getElementById('auth-role-badge').textContent = selectedRole==='doctor'?'Médico / Clínico':'Paciente';
+  showScreen('auth');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════════════
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='login'?0:1)));
+  document.getElementById('tab-login').style.display   = tab==='login'?'':'none';
+  document.getElementById('tab-register').style.display= tab==='register'?'':'none';
+  clearAuthError();
+}
+
+function showAuthError(msg){
+  const el=document.getElementById('auth-error');
+  el.textContent=msg; el.classList.add('show');
+}
+function clearAuthError(){
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+async function doLogin(){
+  clearAuthError();
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  if(!email||!password){showAuthError('Preencha e-mail e senha');return;}
+  try{
+    const r=await api('/api/auth/login',{method:'POST',body:{email,password}});
+    if(r.error){showAuthError(r.error);return;}
+    currentUser=r;
+    afterLogin();
+  }catch(e){showAuthError('Erro de conexão');}
+}
+
+async function doRegister(){
+  clearAuthError();
+  const name    =document.getElementById('reg-name').value.trim();
+  const email   =document.getElementById('reg-email').value.trim();
+  const password=document.getElementById('reg-password').value;
+  if(!name||!email||!password){showAuthError('Preencha todos os campos');return;}
+  try{
+    const r=await api('/api/auth/register',{method:'POST',body:{name,email,password,role:selectedRole}});
+    if(r.error){showAuthError(r.error);return;}
+    currentUser=r;
+    afterLogin();
+  }catch(e){showAuthError('Erro de conexão');}
+}
+
+function afterLogin(){
+  if(currentUser.role==='patient'){
+    document.getElementById('pat-name').textContent=firstName(currentUser.name);
+    document.getElementById('pat-meta').textContent='Paciente · seus dados de saúde';
+    showScreen('patient');
+    loadPatientRecords();
+  } else {
+    document.getElementById('doc-name').textContent=firstName(currentUser.name);
+    document.getElementById('doc-meta').textContent='Médico · painel de pacientes';
+    showScreen('doctor');
+    loadDoctorPatients();
+  }
+}
+
+async function doLogout(){
+  await api('/api/auth/logout',{method:'POST'});
+  currentUser=null; selectedRole=null; engineContext=null;
+  showScreen('welcome');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PATIENT DASHBOARD
+// ══════════════════════════════════════════════════════════════════
+async function loadPatientRecords(){
+  const el=document.getElementById('pat-records-list');
+  el.innerHTML='<div class="loading">Carregando…</div>';
+  const records=await api('/api/records');
+  if(records.error){el.innerHTML='<div class="loading">Erro ao carregar registros.</div>';return;}
+  renderRecordsList(el, records, 'patient');
+}
+
+function renderRecordsList(container, records, viewMode){
+  if(!records.length){
+    container.innerHTML=`<div class="empty-records"><div class="er-icon">📋</div><p>Nenhuma avaliação registrada ainda.<br>Clique em "Nova avaliação" para começar.</p></div>`;
+    return;
+  }
+  container.innerHTML=records.map(r=>{
+    const results=Array.isArray(r.results)?r.results:[];
+    const topResult=results[0];
+    const n1c=results.filter(x=>x.nivel==='N1').length;
+    const n2c=results.filter(x=>x.nivel==='N2').length;
+    const n3c=results.filter(x=>x.nivel==='N3').length;
+    const dateStr=formatDate(r.created_at);
+    return `<div class="rec-card" onclick="openRecord(${r.id})">
+      <div class="rec-card-left">
+        <div class="rec-date">${dateStr}</div>
+        <div class="rec-summary">${Object.keys(r.input_data).length} dados informados${r.doctor_name?' · Dr. '+r.doctor_name:''}${r.notes?' · '+r.notes.slice(0,60):''}
+        </div>
+        <div class="rec-badges">
+          ${n1c?`<span class="rec-badge badge-n1">${n1c} N1</span>`:''}
+          ${n2c?`<span class="rec-badge badge-n2">${n2c} N2</span>`:''}
+          ${n3c?`<span class="rec-badge badge-n3">${n3c} N3</span>`:''}
+        </div>
+      </div>
+      ${topResult?`<div class="rec-pct">${Math.round(topResult.cov*100)}%<small>${shortName(topResult.nome)}</small></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  DOCTOR DASHBOARD
+// ══════════════════════════════════════════════════════════════════
+async function loadDoctorPatients(){
+  const el=document.getElementById('doc-patients-list');
+  el.innerHTML='<div class="loading">Carregando…</div>';
+  const patients=await api('/api/patients');
+  if(!patients.length){
+    el.innerHTML=`<div class="empty-records"><div class="er-icon">🧑</div><p>Nenhum paciente vinculado ainda.<br>Busque um paciente pelo e-mail acima.</p></div>`;
+    return;
+  }
+  el.innerHTML=patients.map(p=>{
+    const initial=(p.name||'?')[0].toUpperCase();
+    const lastStr=p.last_visit?formatDate(p.last_visit):'sem registros';
+    return `<div class="patient-card" onclick="openPatient(${p.id},'${escHtml(p.name)}')">
+      <div class="patient-avatar">${initial}</div>
+      <div class="patient-info">
+        <div class="patient-name">${escHtml(p.name)}</div>
+        <div class="patient-meta">${p.record_count} avaliação(ões) · última: ${lastStr}</div>
+      </div>
+      <span style="color:var(--muted);font-size:12px">→</span>
+    </div>`;
+  }).join('');
+}
+
+async function searchPatient(){
+  const email=document.getElementById('patient-search-email').value.trim();
+  const el=document.getElementById('search-result');
+  if(!email){el.innerHTML='';return;}
+  el.innerHTML='<div class="loading">Buscando…</div>';
+  const r=await api('/api/patients/search?email='+encodeURIComponent(email));
+  if(r.error){
+    el.innerHTML=`<div class="card" style="border-color:var(--rule)">
+      <div class="card-label" style="margin-bottom:.6rem">Paciente não encontrado · Cadastrar agora</div>
+      <div style="display:flex;flex-direction:column;gap:.55rem">
+        <input id="create-pat-name" class="search-input" type="text" placeholder="Nome completo do paciente" style="width:100%;box-sizing:border-box">
+        <input id="create-pat-email" class="search-input" type="email" value="${escHtml(email)}" readonly style="width:100%;box-sizing:border-box;opacity:.7">
+        <input id="create-pat-pass" class="search-input" type="password" placeholder="Senha temporária (mín. 6 caracteres)" style="width:100%;box-sizing:border-box">
+        <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="createPatient()">Cadastrar e abrir prontuário</button>
+      </div>
+    </div>`;
+    return;
+  }
+  el.innerHTML=`<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+    <div>
+      <div class="card-title">${escHtml(r.name)}</div>
+      <div class="card-meta">${escHtml(r.email)}</div>
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-primary btn-sm" onclick="linkAndOpenPatient(${r.id},'${escHtml(r.name)}')">Vincular & abrir</button>
+    </div>
+  </div>`;
+}
+
+async function createPatient(){
+  const name=document.getElementById('create-pat-name').value.trim();
+  const email=document.getElementById('create-pat-email').value.trim();
+  const password=document.getElementById('create-pat-pass').value;
+  if(!name){showToast('Informe o nome do paciente','error');return;}
+  if(!password||password.length<6){showToast('Senha deve ter ao menos 6 caracteres','error');return;}
+  const r=await api('/api/patients/create',{method:'POST',body:{name,email,password}});
+  if(r.error){showToast(r.error,'error');return;}
+  document.getElementById('patient-search-email').value='';
+  document.getElementById('search-result').innerHTML='';
+  await loadDoctorPatients();
+  showToast('Paciente cadastrado com sucesso');
+  openPatient(r.id,r.name);
+}
+
+async function linkAndOpenPatient(pid,name){
+  await api('/api/patients/'+pid+'/link',{method:'POST'});
+  openPatient(pid,name);
+}
+
+async function openPatient(pid,name){
+  currentPatientId=pid;
+  currentPatientName=name;
+  document.getElementById('pr-patient-name').textContent=name;
+  document.getElementById('pr-patient-meta').textContent='Paciente';
+  showScreen('patient-records');
+  loadPatientTimeline(pid);
+}
+
+async function loadPatientTimeline(pid){
+  const el=document.getElementById('pr-records-list');
+  el.innerHTML='<div class="loading">Carregando…</div>';
+  const r=await api('/api/patients/'+pid+'/records');
+  if(r.error){el.innerHTML='<div class="loading">Erro.</div>';return;}
+  renderRecordsList(el, r.records,'doctor');
+}
+
+function startEngineForPatient(){
+  startEngine(currentPatientId, currentPatientName);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  ENGINE SCREEN
+// ══════════════════════════════════════════════════════════════════
+function startEngine(patientId, patientName){
+  engineContext={patientId, patientName};
+  clearAll();
+  currentResults=[];
+  document.getElementById('engine-results').style.display='none';
+  document.getElementById('engine-empty').style.display='';
+  if(patientId){
+    document.getElementById('engine-context-sub').textContent=
+      'Avaliação para: '+patientName+'. Selecione o resultado de cada dado.';
+  } else {
+    document.getElementById('engine-context-sub').textContent=
+      'Selecione o resultado de cada dado clínico. O engine calcula inferências epidemiológicas ponderadas.';
+  }
+  buildEngineUI();
+  showScreen('engine');
+}
+
+function engineGoBack(){
+  if(engineContext&&engineContext.patientId){
+    showScreen('patient-records');
+  } else if(currentUser&&currentUser.role==='doctor'){
+    showScreen('doctor');
+  } else {
+    showScreen('patient');
+  }
+}
+
+function buildEngineUI(){
+  const container=document.getElementById('cat-list');
+  container.innerHTML=CATS.map(cat=>{
+    const catData=DADOS.filter(d=>d.cat===cat.id);
+    if(!catData.length) return '';
+    return `<div class="cat-block" id="cat-${cat.id}">
+      <div class="cat-head" onclick="toggleCat('${cat.id}')">
+        <div class="cat-label-inner">${cat.icon} ${cat.label}<span class="cat-count" id="cnt-${cat.id}">0/${catData.length}</span></div>
+        <span class="cat-arrow">▶</span>
+      </div>
+      <div class="cat-items">${catData.map(d=>`
+        <div class="dato-wrap">
+          <div class="dato-name">${d.nome}</div>
+          <div class="estado-group">${d.estados.map((e,i)=>`
+            <button class="est" id="est-${d.id}-${i}" onclick="selectEst('${d.id}',${i},${e.alpha},${e.risco},'${d.dom}')">${escHtml(e.label)}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCat(id){
+  const el=document.getElementById('cat-'+id);
+  if(el) el.classList.toggle('open');
+}
+
+function selectEst(dadoId,idx,alpha,risco,dom){
+  const prev=estadoAtual.get(dadoId);
+  const alreadySel=prev&&prev.idx===idx;
+  if(alreadySel){
+    estadoAtual.delete(dadoId);
+    document.querySelectorAll(`[id^="est-${dadoId}-"]`).forEach(e=>e.classList.remove('sel','risk-cardio','risk-mental','risk-onco','risk-farmaco'));
+  } else {
+    estadoAtual.set(dadoId,{idx,alpha,risco});
+    document.querySelectorAll(`[id^="est-${dadoId}-"]`).forEach(e=>e.classList.remove('sel','risk-cardio','risk-mental','risk-onco','risk-farmaco'));
+    const btn=document.getElementById(`est-${dadoId}-${idx}`);
+    btn.classList.add('sel');
+    if(risco){
+      const cls={'cardio':'risk-cardio','mental':'risk-mental','onco':'risk-onco','farmaco':'risk-farmaco'}[dom]||'';
+      if(cls) btn.classList.add(cls);
+    }
+  }
+  updateSelBar();
+  updateCatCount(DADOS.find(d=>d.id===dadoId)?.cat);
+}
+
+function updateSelBar(){
+  const n=estadoAtual.size;
+  const riskN=[...estadoAtual.values()].filter(v=>v.risco).length;
+  document.getElementById('sel-n').textContent=n;
+  const rEl=document.getElementById('sel-risk');
+  if(riskN>0){rEl.textContent=riskN+' em risco';rEl.style.display='';}
+  else rEl.style.display='none';
+  document.getElementById('btn-calc').disabled=n===0;
+}
+
+function updateCatCount(catId){
+  if(!catId) return;
+  const catData=DADOS.filter(d=>d.cat===catId);
+  const sel=catData.filter(d=>estadoAtual.has(d.id)).length;
+  const el=document.getElementById('cnt-'+catId);
+  if(el) el.textContent=`${sel}/${catData.length}`;
+}
+
+function clearAll(){
+  estadoAtual.clear();
+  document.querySelectorAll('.est').forEach(e=>e.classList.remove('sel','risk-cardio','risk-mental','risk-onco','risk-farmaco'));
+  CATS.forEach(c=>updateCatCount(c.id));
+  updateSelBar();
+}
+
+function presetDemo(){
+  clearAll();
+  const preset={
+    imc:2,cintura:2,glicemia:1,hba1c:1,hdl:2,triglicerides:1,
+    pressao:2,phq9:1,sono_horas:2,apneia:1,atv_fisica:2,
+    hist_familiar_dm:2,idade:1,psa:1
+  };
+  Object.entries(preset).forEach(([id,idx])=>{
+    const d=DADOS_IDX[id];
+    if(d&&d.estados[idx]) selectEst(id,idx,d.estados[idx].alpha,d.estados[idx].risco,d.dom);
+  });
+}
+
+// ── Render Results ─────────────────────────────────────────────────
+function renderResults(results){
+  const n1c=results.filter(x=>x.nivel==='N1').length;
+  const n2c=results.filter(x=>x.nivel==='N2').length;
+  const n3c=results.filter(x=>x.nivel==='N3').length;
+  const el=document.getElementById('engine-results');
+  el.innerHTML=`
+    <div class="results-meta">
+      <div class="rm-title">Inferências ativadas</div>
+      <div class="rm-pills">
+        ${n1c?`<span class="rm-pill pill-n1">${n1c} N1</span>`:''}
+        ${n2c?`<span class="rm-pill pill-n2">${n2c} N2</span>`:''}
+        ${n3c?`<span class="rm-pill pill-n3">${n3c} N3</span>`:''}
+      </div>
+    </div>
+    ${results.map(r=>renderInferCard(r)).join('')}
+    <div class="save-record-block">
+      <h3>Salvar avaliação</h3>
+      <div class="form-group">
+        <label class="form-label">Anotações (opcional)</label>
+        <textarea class="notes-input" id="save-notes" placeholder="Contexto clínico, observações, próximos passos…"></textarea>
+      </div>
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveRecord()">Salvar avaliação</button>
+        <button class="btn btn-ghost" onclick="engineGoBack()">Descartar</button>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:1rem;line-height:1.6">Cada percentual = fração das variáveis do estudo de referência presente no schema, ponderada pelo resultado clínico (α). Não é probabilidade de doença. Instrumento de triagem — não substitui avaliação médica profissional.</p>
+  `;
+}
+
+function renderInferCard(r,isDetail){
+  const pct=Math.round(r.cov*100);
+  const lvl=r.nivel.toLowerCase();
+  const barColor=lvl==='n1'?'var(--accent)':lvl==='n2'?'#6d28d9':'#c2410c';
+  const sugestKey=currentUser&&currentUser.role==='doctor'?'medSugest':'patSugest';
+  const def=getDefById(r.id);
+  const sugestArr=r[sugestKey]||(def&&def[sugestKey])||r.medSugest||(def&&def.medSugest)||[];
+  return `<div class="infer-card${r.alertMental?' alert-mental':''}">
+    <div class="ic-head">
+      <span class="ic-badge ${lvl}">${r.nivel}</span>
+      <span class="ic-name">${r.nome}</span>
+      <span class="ic-pct" style="color:${barColor}">${pct}%</span>
+    </div>
+    <div class="ic-bar"><div class="ic-fill ${lvl}" style="width:${pct}%;background:${barColor}"></div></div>
+    ${!isDetail?'':''}<div class="ic-sugest">
+      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">${currentUser&&currentUser.role==='doctor'?'Conduta sugerida':'O que significa'}</div>
+      ${sugestArr.map(s=>`<div style="margin-bottom:.35rem">→ ${s}</div>`).join('')}
+      <div style="font-family:'Syne',sans-serif;font-size:10px;color:var(--muted);margin-top:.5rem">Ref: ${r.ref||'—'}</div>
+    </div>
+  </div>`;
+}
+
+// ── Save record ────────────────────────────────────────────────────
+async function saveRecord(){
+  if(!currentResults.length){showToast('Calcule primeiro','error');return;}
+  const notes=document.getElementById('save-notes')?.value||'';
+  const input_data=Object.fromEntries([...estadoAtual.entries()].map(([k,v])=>[k,{idx:v.idx,alpha:v.alpha,risco:v.risco}]));
+  const results=currentResults.map(r=>({id:r.id,nivel:r.nivel,nome:r.nome,cov:r.cov,dominio:r.dominio,ref:r.ref,alertMental:r.alertMental,medSugest:r.medSugest,patSugest:r.patSugest}));
+  const body={input_data,results,notes};
+  if(engineContext&&engineContext.patientId) body.patient_id=engineContext.patientId;
+  const r=await api('/api/records',{method:'POST',body});
+  if(r.error){showToast(r.error,'error');return;}
+  showToast('Avaliação salva!');
+  engineGoBack();
+  if(currentUser.role==='patient') loadPatientRecords();
+  else if(currentPatientId) loadPatientTimeline(currentPatientId);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RECORD DETAIL
+// ══════════════════════════════════════════════════════════════════
+let currentRecord=null;
+let detailBackTarget='';
+
+async function openRecord(id){
+  if(currentUser.role==='patient'){
+    const records=await api('/api/records');
+    currentRecord=records.find(r=>r.id===id);
+    detailBackTarget='patient';
+  } else {
+    const r=await api('/api/patients/'+currentPatientId+'/records');
+    currentRecord=r.records.find(rec=>rec.id===id);
+    detailBackTarget='patient-records';
+  }
+  if(!currentRecord) return;
+  renderRecordDetail(currentRecord);
+  showScreen('record-detail');
+}
+
+function detailGoBack(){
+  showScreen(detailBackTarget);
+  if(detailBackTarget==='patient') loadPatientRecords();
+  else if(detailBackTarget==='patient-records') loadPatientTimeline(currentPatientId);
+}
+
+function renderRecordDetail(record){
+  document.getElementById('rd-date').textContent=formatDate(record.created_at);
+  document.getElementById('rd-title').textContent=currentUser.role==='doctor'?(currentPatientName||'Paciente'):'Minha avaliação';
+  document.getElementById('rd-meta').textContent=
+    (record.doctor_name?'Dr. '+record.doctor_name:'Autoregistro')+
+    (record.notes?' · '+record.notes:'');
+
+  const results=Array.isArray(record.results)?record.results:[];
+  const inputs=record.input_data||{};
+
+  // Results tab
+  const n1c=results.filter(x=>x.nivel==='N1').length;
+  const n2c=results.filter(x=>x.nivel==='N2').length;
+  const n3c=results.filter(x=>x.nivel==='N3').length;
+  document.getElementById('detail-tab-results').innerHTML=`
+    <div class="results-meta" style="margin-bottom:1rem">
+      <div class="rm-title">${results.length} inferências ativadas</div>
+      <div class="rm-pills">
+        ${n1c?`<span class="rm-pill pill-n1">${n1c} N1</span>`:''}
+        ${n2c?`<span class="rm-pill pill-n2">${n2c} N2</span>`:''}
+        ${n3c?`<span class="rm-pill pill-n3">${n3c} N3</span>`:''}
+      </div>
+    </div>
+    ${results.map(r=>renderInferCard(r,true)).join('')}`;
+
+  // Inputs tab
+  const inputKeys=Object.keys(inputs);
+  document.getElementById('detail-tab-inputs').innerHTML=`
+    <div class="section-label">${inputKeys.length} dados informados</div>
+    <div class="input-summary">
+      ${inputKeys.map(k=>{
+        const d=DADOS_IDX[k];
+        const v=inputs[k];
+        const e=d&&d.estados[v.idx];
+        return`<span class="is-pill${v.risco?' risk':''}">
+          ${d?d.nome:k}: ${e?e.label:'—'}
+        </span>`;
+      }).join('')}
+    </div>`;
+
+  // Diagnoses tab
+  renderDiagnoses(results);
+
+  // Investigations tab
+  renderInvestigations(results);
+
+  // Suggest tab
+  const sugestKey=currentUser.role==='doctor'?'medSugest':'patSugest';
+  const allSugest=results.flatMap(r=>{
+    const def=getDefById(r.id);
+    const arr=r[sugestKey]||(def&&def[sugestKey])||r.medSugest||(def&&def.medSugest)||[];
+    return arr.map(s=>({s,nome:r.nome,nivel:r.nivel}));
+  });
+  document.getElementById('detail-tab-suggest').innerHTML=allSugest.length?
+    allSugest.map(({s,nome,nivel})=>`<div class="card" style="margin-bottom:.6rem">
+      <div class="card-label">${nivel} · ${nome}</div>
+      <div style="font-size:13px;color:#333;line-height:1.65">→ ${s}</div>
+    </div>`).join(''):
+    '<div class="card-meta">Sem sugestões disponíveis para este registro.</div>';
+}
+
+function switchDetailTab(tab){
+  const tabs=['results','diag','invest','suggest','inputs'];
+  document.querySelectorAll('.view-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===tab));
+  tabs.forEach(t=>{document.getElementById('detail-tab-'+t).style.display=t===tab?'':'none';});
+}
+
+function renderDiagnoses(results){
+  const probOrder={alta:0,moderada:1,investigar:2};
+  const probLabel={alta:'Alta suspeita',moderada:'Suspeita moderada',investigar:'A investigar / excluir'};
+  const probColor={alta:'#7c3aed',moderada:'#0284c7',investigar:'#64748b'};
+  const probBg={alta:'#f3e8ff',moderada:'#e0f2fe',investigar:'#f1f5f9'};
+
+  const seen=new Set();
+  const all=[];
+  results.forEach(r=>{
+    const doencas=DOENCAS_MAP[r.id]||[];
+    doencas.forEach(d=>{
+      const key=d.cid10+'|'+d.doenca.toLowerCase().slice(0,25);
+      if(seen.has(key)) return;
+      seen.add(key);
+      all.push({...d,fonte:r.nome,nivel:r.nivel});
+    });
+  });
+
+  if(!all.length){
+    document.getElementById('detail-tab-diag').innerHTML=
+      '<div class="card-meta">Sem condições mapeadas para este conjunto de inferências.</div>';
+    return;
+  }
+
+  all.sort((a,b)=>(probOrder[a.prob]??9)-(probOrder[b.prob]??9));
+
+  const groups={};
+  all.forEach(d=>{
+    const g=d.prob||'investigar';
+    if(!groups[g]) groups[g]=[];
+    groups[g].push(d);
+  });
+
+  const disclaimer=`<div style="font-size:11px;color:var(--muted);background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:.55rem .75rem;margin-bottom:1rem;line-height:1.5">
+    <strong>Aviso clínico:</strong> Estas condições são <em>hipóteses diagnósticas</em> geradas pelo perfil de risco — não constituem diagnóstico. Confirmar com anamnese, exame físico e exames complementares específicos.
+  </div>`;
+
+  const html=Object.entries(groups).map(([prob,items])=>`
+    <div style="margin-bottom:1.4rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem">
+        <span style="background:${probColor[prob]};color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 10px;border-radius:4px">${probLabel[prob]||prob}</span>
+        <span style="font-size:11px;color:var(--muted)">${items.length} condição(ões)</span>
+      </div>
+      ${items.map(d=>`
+        <div class="card" style="margin-bottom:.45rem;padding:.75rem 1rem;border-left:3px solid ${probColor[d.prob]}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">
+            <div style="font-size:13px;font-weight:600;color:var(--ink)">${escHtml(d.doenca)}</div>
+            <span style="font-size:10px;font-weight:700;color:${probColor[d.prob]};background:${probBg[d.prob]};padding:1px 7px;border-radius:10px;white-space:nowrap">${escHtml(d.cid10)}</span>
+          </div>
+          <div style="font-size:12px;color:#444;line-height:1.55;margin-top:.25rem">${escHtml(d.raciocinio)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:.3rem">Inferência: ${escHtml(d.nivel)} · ${escHtml(shortName(d.fonte))}</div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('detail-tab-diag').innerHTML=disclaimer+html;
+}
+
+function renderInvestigations(results){
+  const urgOrder={urgente:0,breve:1,eletiva:2,consulta:3};
+  const urgLabel={urgente:'Urgente',breve:'Em breve',eletiva:'Eletiva',consulta:'Nesta consulta'};
+  const urgColor={urgente:'#dc2626',breve:'#d97706',eletiva:'#16a34a',consulta:'#2563eb'};
+
+  const seen=new Set();
+  const all=[];
+  results.forEach(r=>{
+    const def=getDefById(r.id);
+    const exames=(def&&def.exames)||[];
+    exames.forEach(e=>{
+      const key=e.exam.toLowerCase().slice(0,30);
+      if(seen.has(key)) return;
+      seen.add(key);
+      all.push({...e,fonte:r.nome,nivel:r.nivel});
+    });
+  });
+
+  if(!all.length){
+    document.getElementById('detail-tab-invest').innerHTML=
+      '<div class="card-meta">Sem investigações mapeadas para este registro.</div>';
+    return;
+  }
+
+  all.sort((a,b)=>(urgOrder[a.urgencia]??9)-(urgOrder[b.urgencia]??9));
+
+  const groups={};
+  all.forEach(e=>{
+    const g=e.urgencia||'eletiva';
+    if(!groups[g]) groups[g]=[];
+    groups[g].push(e);
+  });
+
+  const html=Object.entries(groups).map(([urg,items])=>`
+    <div style="margin-bottom:1.2rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+        <span style="background:${urgColor[urg]};color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:4px">${urgLabel[urg]||urg}</span>
+      </div>
+      ${items.map(e=>`
+        <div class="card" style="margin-bottom:.45rem;padding:.7rem .9rem">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:.2rem">${escHtml(e.exam)}</div>
+          <div style="font-size:12px;color:#555;line-height:1.55">${escHtml(e.indicacao)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:.3rem">
+            Ativado por: ${escHtml(e.nivel)} · ${escHtml(shortName(e.fonte))}
+            ${e.ref?` · <em>${escHtml(e.ref)}</em>`:''}
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('detail-tab-invest').innerHTML=
+    `<div class="section-label" style="margin-bottom:.8rem">${all.length} investigação(ões) sugerida(s)</div>`+html;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════════
+async function api(url,opts={}){
+  const res=await fetch(url,{
+    method:opts.method||'GET',
+    headers:{'Content-Type':'application/json'},
+    body:opts.body?JSON.stringify(opts.body):undefined,
+    credentials:'same-origin'
+  });
+  return res.json();
+}
+
+function firstName(name){return(name||'').split(' ')[0];}
+
+function formatDate(dtStr){
+  if(!dtStr) return '—';
+  const d=new Date(dtStr.replace(' ','T'));
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function shortName(name){
+  if(!name) return '';
+  return name.length>22?name.slice(0,20)+'…':name;
+}
+
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer=null;
+function showToast(msg,type){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.toggle('error',type==='error');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  INIT — check if already logged in
+// ══════════════════════════════════════════════════════════════════
+(async()=>{
+  const me=await api('/api/me');
+  if(me&&me.id){
+    currentUser=me;
+    selectedRole=me.role;
+    afterLogin();
+  }
+})();
+</script>
+<script src="shared.js" defer></script>
+</body>
+</html>
