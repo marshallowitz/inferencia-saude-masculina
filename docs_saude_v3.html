@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentação — Engine de Saúde Masculina v1</title>
+<meta name="description" content="Documentação técnica do Engine de Inferência em Saúde Masculina. Modelos, variáveis, estados clínicos, faixas α e 50+ referências científicas.">
+<meta property="og:title" content="Documentação — Engine de Saúde Masculina">
+<meta property="og:description" content="Todos os modelos N1, N2, N3 com variáveis, pesos e referências publicadas.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+:root{
+  --ink:#0f0e0c; --paper:#f8f6f0; --rule:#d8d4c8; --muted:#8a8680;
+  --accent:#c8401a; --accent2:#1a5fc8;
+  --n1:#1d4ed8; --n2:#6d28d9; --n3:#c2410c;
+  --metabol:#1d4ed8; --cardio:#dc2626; --mental:#0f766e;
+  --onco:#be123c; --farmaco:#b45309; --sono:#1d4ed8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.7}
+.wrap{max-width:1120px;margin:0 auto;padding:0 2rem}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #2a2a28;padding:0 2rem}
+.nav-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;height:52px}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#f8f6f0;letter-spacing:-.01em;margin-right:auto;text-decoration:none}
+.nav-logo em{color:#93c5fd;font-style:normal}
+.nav-links{display:flex}
+.nav-links a{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#888;text-decoration:none;padding:0 1.1rem;height:52px;display:flex;align-items:center;border-left:1px solid #2a2a28;transition:color .15s}
+.nav-links a:hover{color:#f8f6f0}
+.nav-links a.active{color:#f8f6f0}
+
+/* MASTHEAD */
+.masthead{border-bottom:3px solid var(--ink);padding:3rem 0 2rem;margin-bottom:3rem}
+.masthead-in{max-width:1120px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;flex-wrap:wrap}
+.masthead-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(26px,4vw,46px);line-height:1.05;letter-spacing:-.02em}
+.masthead-title em{color:var(--accent2);font-style:normal}
+.masthead-meta{font-size:12px;color:var(--muted);text-align:right;line-height:2;font-family:'Syne',sans-serif;letter-spacing:.05em;text-transform:uppercase}
+
+/* INTRO */
+.intro{display:grid;grid-template-columns:1fr 1fr;gap:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule);margin-bottom:3rem}
+@media(max-width:700px){.intro{grid-template-columns:1fr}}
+.intro-lead{font-size:16px;line-height:1.75;color:var(--ink)}
+.intro-box{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.5rem}
+.intro-box h3{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.level-row{display:flex;align-items:baseline;gap:.8rem;padding:.5rem 0;border-bottom:1px solid var(--rule)}
+.level-row:last-child{border-bottom:none}
+.lbadge{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:.05em;flex-shrink:0}
+.lbadge.n1{background:#dbeafe;color:var(--n1)}
+.lbadge.n2{background:#ede9fe;color:var(--n2)}
+.lbadge.n3{background:#ffedd5;color:var(--n3)}
+.level-desc{font-size:13px;color:var(--ink)}
+
+/* TOC */
+.toc{background:#fff;border:1px solid var(--rule);padding:1.5rem;border-radius:4px;margin-bottom:3rem}
+.toc h3{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.3rem}
+.toc a{font-size:13px;color:var(--accent2);text-decoration:none;display:block;padding:2px 0}
+.toc a:hover{text-decoration:underline}
+
+/* SECTIONS */
+.section{margin-bottom:4rem}
+.section-head{display:flex;align-items:baseline;gap:1rem;border-bottom:2px solid var(--ink);padding-bottom:.5rem;margin-bottom:2rem}
+.section-head h2{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.01em}
+.sh-note{font-size:12px;color:var(--muted);font-family:'Syne',sans-serif;letter-spacing:.04em;text-transform:uppercase;margin-left:auto}
+
+/* FÓRMULA */
+.formula-hero{background:#fff;border:2px solid var(--ink);border-radius:4px;padding:2.5rem 3rem;margin-bottom:2rem;text-align:center}
+.formula-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem}
+.formula-display{font-family:'Source Serif 4',Georgia,serif;font-size:clamp(26px,4vw,42px);font-weight:300;color:var(--ink);line-height:1.2;margin-bottom:2rem;display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .3rem}
+.frac-num{border-bottom:2px solid var(--ink);padding:.1rem .5rem;font-size:.85em}
+.frac-den{padding:.1rem .5rem;font-size:.85em}
+.formula-legend{display:grid;grid-template-columns:auto 1fr;gap:.4rem 1.5rem;text-align:left;max-width:620px;margin:0 auto}
+.legend-sym{font-family:'Source Serif 4',serif;font-size:15px;font-weight:600;color:var(--accent2);white-space:nowrap;padding-top:1px}
+.legend-def{font-size:13px;color:#444;line-height:1.5}
+
+.formula-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+@media(max-width:700px){.formula-grid{grid-template-columns:1fr}}
+.formula-block{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.5rem}
+.formula-block h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--ink);margin-bottom:.8rem}
+.formula-block p{font-size:13px;line-height:1.7;color:#333;margin-bottom:.5rem}
+.formula-note{font-size:12px;color:var(--muted);font-style:italic;line-height:1.6;margin-top:.5rem}
+
+/* Tabela alpha */
+.alpha-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--rule);margin-bottom:1rem}
+.alpha-table thead tr{background:var(--ink);color:var(--paper)}
+.alpha-table thead th{padding:8px 12px;text-align:left;font-family:'Syne',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.alpha-table tbody tr{border-bottom:1px solid var(--rule)}
+.alpha-table tbody tr:last-child{border-bottom:none}
+.alpha-table td{padding:7px 12px;vertical-align:top;line-height:1.5}
+.alpha-val{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--ink)}
+.alpha-label{font-size:12px;color:var(--muted)}
+
+/* Barra alpha visual */
+.alpha-bar-vis{display:flex;align-items:center;gap:.4rem}
+.alpha-fill{height:6px;border-radius:3px;background:var(--accent2);display:inline-block}
+.alpha-fill.risk{background:var(--cardio)}
+.alpha-fill.norm{background:var(--accent2)}
+.alpha-fill.prot{background:var(--mental)}
+
+/* MODELS GRID */
+.models-grid{display:flex;flex-direction:column;gap:1.5rem}
+.model-card{background:#fff;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.model-card-head{display:flex;align-items:center;gap:1rem;padding:.8rem 1.2rem;border-bottom:1px solid var(--rule);background:#faf9f5}
+.mnbadge{font-family:'Syne',sans-serif;font-weight:700;font-size:10px;padding:2px 8px;border-radius:2px;letter-spacing:.05em;flex-shrink:0}
+.mnbadge.n1{background:#dbeafe;color:var(--n1)}
+.mnbadge.n2{background:#ede9fe;color:var(--n2)}
+.mnbadge.n3{background:#ffedd5;color:var(--n3)}
+.mname{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;flex:1}
+.mdom{font-size:11px;color:var(--muted);font-family:'Syne',sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.dom-tag{display:inline-block;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;padding:1px 6px;border-radius:2px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.dom-metabol{background:#dbeafe;color:var(--metabol)}
+.dom-cardio{background:#fee2e2;color:var(--cardio)}
+.dom-mental{background:#ccfbf1;color:var(--mental)}
+.dom-onco{background:#ffe4e6;color:var(--onco)}
+.dom-farmaco{background:#fef3c7;color:var(--farmaco)}
+.dom-sono{background:#dbeafe;color:var(--sono)}
+.dom-bemestar{background:#f5f3ff;color:var(--n2)}
+.model-card-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+@media(max-width:800px){.model-card-body{grid-template-columns:1fr}}
+.model-col{padding:1.1rem 1.2rem;border-right:1px solid var(--rule)}
+.model-col:last-child{border-right:none}
+.model-col h4{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.model-col p{font-size:13px;line-height:1.6;color:#333}
+.metric{font-size:13px;font-weight:600;color:var(--n1);font-family:'Syne',sans-serif}
+.caveat{font-size:12px;color:var(--muted);line-height:1.6;font-style:italic}
+.caveat.alert{color:#7f1d1d;background:#fff0f0;padding:6px 8px;border-radius:3px;border-left:2px solid #dc2626;font-style:normal;font-weight:500}
+
+/* Var list */
+.var-list{display:flex;flex-direction:column;gap:3px}
+.var-item{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px dotted var(--rule)}
+.var-item:last-child{border-bottom:none}
+.var-name{color:#333}
+.var-w{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:var(--ink);white-space:nowrap}
+.var-bar{width:56px;height:3px;background:var(--rule);border-radius:2px;overflow:hidden;margin-left:auto}
+.var-fill{height:100%;background:var(--n1);border-radius:2px}
+
+/* Needs list */
+.needs-list{display:flex;gap:.4rem;flex-wrap:wrap}
+.need-tag{font-size:12px;font-family:'Syne',sans-serif;font-weight:600;border-radius:2px;padding:2px 8px;border:1px solid}
+.need-n1{background:#dbeafe;border-color:#93c5fd;color:var(--n1)}
+.need-n2{background:#ede9fe;border-color:#c4b5fd;color:var(--n2)}
+.need-n3{background:#ffedd5;border-color:#fed7aa;color:var(--n3)}
+
+/* Tabela estados */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--rule)}
+.data-table thead tr{background:var(--ink);color:var(--paper)}
+.data-table thead th{padding:9px 12px;text-align:left;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.data-table tbody tr{border-bottom:1px solid var(--rule)}
+.data-table tbody tr:hover{background:#faf9f5}
+.data-table td{padding:8px 12px;vertical-align:top;line-height:1.5}
+.td-var{font-weight:600;color:var(--ink)}
+.td-state{color:#333;font-size:13px}
+.td-alpha{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;text-align:center}
+.td-alpha.risk{color:var(--cardio)}
+.td-alpha.mid{color:var(--farmaco)}
+.td-alpha.norm{color:var(--accent2)}
+.td-alpha.prot{color:var(--mental)}
+.td-source{font-size:11px;color:var(--muted);font-style:italic}
+.cat-group-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:6px 12px;background:#faf9f5;border-bottom:1px solid var(--rule)}
+
+/* Ref table */
+.ref-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid var(--rule)}
+.ref-table thead tr{background:var(--ink);color:var(--paper)}
+.ref-table thead th{padding:8px 12px;text-align:left;font-family:'Syne',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.ref-table tbody tr{border-bottom:1px solid var(--rule)}
+.ref-table tbody tr:last-child{border-bottom:none}
+.ref-table tbody tr:hover{background:#faf9f5}
+.ref-table td{padding:8px 12px;vertical-align:top;line-height:1.5}
+.rcode{font-family:'Syne',sans-serif;font-weight:700;font-size:10px;color:var(--muted);white-space:nowrap}
+.rcite{color:#333;font-size:12px}
+.rmetric{font-family:'Syne',sans-serif;font-weight:600;font-size:11px;color:var(--n1);white-space:nowrap}
+.ruse{font-size:11px;color:var(--muted)}
+
+/* Ethics */
+.ethics-box{background:#fff8f0;border:2px solid #d88040;border-radius:4px;padding:1.5rem 2rem;margin-bottom:3rem}
+.ethics-box h3{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#9a4000;margin-bottom:.8rem}
+.ethics-box p{font-size:13px;line-height:1.7;color:#5a3000;margin-bottom:.5rem}
+.ethics-box p:last-child{margin-bottom:0}
+
+/* Footer */
+.footer{border-top:3px solid var(--ink);padding:2rem 0;margin-top:4rem}
+.footer-in{max-width:1120px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap}
+.footer-note{font-size:12px;color:var(--muted);font-family:'Syne',sans-serif;letter-spacing:.04em}
+
+@media print{.toc,.nav{display:none}body{font-size:11px}.masthead{padding:1.5rem 0}}
+</style>
+</head>
+<body>
+
+<div id="read-progress"></div>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-in">
+    <div class="masthead-title">Engine de Inferência<br>Saúde <em>Masculina</em><br>Documentação de Referência</div>
+    <div class="masthead-meta">
+      Versão Inicial &nbsp;·&nbsp; Abril 2026<br>
+      16 modelos N1 &nbsp;·&nbsp; 9 modelos N2 &nbsp;·&nbsp; 4 modelos N3<br>
+      60+ variáveis &nbsp;·&nbsp; 250+ estados clínicos<br>
+      Sofia Marshallowitz
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ÉTICA -->
+<div class="ethics-box">
+  <h3>⚠ Instrumento de triagem — não substitui avaliação clínica</h3>
+  <p>Este engine calcula a <strong>cobertura</strong> de modelos epidemiológicos validados dado um schema de dados clínicos disponíveis. Cobertura é uma medida epistêmica, não é probabilidade de doença, não é diagnóstico, não é prognóstico individual.</p>
+  <p>Os modelos N1 são derivados de estudos populacionais. Os pesos refletem importância relativa reportada na literatura, não coeficientes treinados em dados proprietários. Resultados devem ser interpretados por profissional de saúde habilitado. Conforme CFM Resolução 2.314/2022 e LGPD (Lei 13.709/2018).</p>
+</div>
+
+<!-- INTRO -->
+<div class="intro">
+  <div class="intro-lead">
+    <p>O engine recebe o resultado clínico de cada variável disponível (não apenas se ela existe) e calcula quais inferências epidemiológicas são viáveis, com cobertura ponderada pelo estado clínico (α-ponderação).</p>
+    <p style="margin-top:1rem">Na versão inicial, cada variável tem estados clínicos discretizados com faixas derivadas diretamente dos pontos de corte dos estudos de validação originais. Um IMC de 22 kg/m² e um IMC de 38 kg/m² têm contribuições diferentes para um modelo de obesidade, não são equivalentes.</p>
+    <p style="margin-top:1rem">Modelos se propagam em três camadas: N1 (instrumentos validados individuais) → N2 (padrões clínicos compostos) → N3 (meta-inferências para planejamento terapêutico integrado).</p>
+  </div>
+  <div class="intro-box">
+    <h3>Níveis de inferência</h3>
+    <div class="level-row">
+      <span class="lbadge n1">N1</span>
+      <span class="level-desc"><strong>Inferências primárias</strong> — cada N1 mapeia para um instrumento epidemiológico validado único (Framingham, FINDRISC, PHQ-9, LiFeCRC etc.). Cobertura calculada diretamente das variáveis com α-ponderação.</span>
+    </div>
+    <div class="level-row">
+      <span class="lbadge n2">N2</span>
+      <span class="level-desc"><strong>Inferências compostas</strong> — combinam múltiplos N1 (e outros N2) por média ponderada. Capturam síndromes e padrões que emergem da interação entre modelos. 9 modelos, mínimo 2 entradas ativas.</span>
+    </div>
+    <div class="level-row">
+      <span class="lbadge n3">N3</span>
+      <span class="level-desc"><strong>Meta-inferências</strong> — síntese de mais alta ordem, combinando múltiplos N2 e outros N3. Destinados a orientar o planejamento terapêutico integrado. 4 modelos.</span>
+    </div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <h3>Conteúdo</h3>
+  <div class="toc-grid">
+    <a href="#formula">1. Fórmula e α-ponderação</a>
+    <a href="#n1">2. Modelos N1 (16 modelos)</a>
+    <a href="#n2">3. Modelos N2 (9 modelos)</a>
+    <a href="#n3">4. Modelos N3 (4 modelos)</a>
+    <a href="#estados">5. Estados clínicos e faixas</a>
+    <a href="#propagacao">6. Algoritmo de propagação</a>
+    <a href="#refs">7. Referências bibliográficas</a>
+  </div>
+</div>
+
+<!-- ── 1. FÓRMULA ───────────────────────────────────────────────── -->
+<div class="section" id="formula">
+  <div class="section-head">
+    <h2>1. Fórmula central e α-ponderação</h2>
+    <span class="sh-note">Versão Inicial -> estado clínico como entrada</span>
+  </div>
+
+  <div class="formula-hero">
+    <div class="formula-label">Função de cobertura ponderada por estado clínico</div>
+    <div class="formula-display">
+      <span>C<sub style="font-size:.55em">m</sub></span>
+      <span>=</span>
+      <div class="frac">
+        <div class="frac-num">∑ (w<sub style="font-size:.6em">i</sub> · α<sub style="font-size:.6em">i</sub>)</div>
+        <div class="frac-den">∑ w<sub style="font-size:.6em">i</sub></div>
+      </div>
+    </div>
+    <div class="formula-legend">
+      <div class="legend-sym">C<sub style="font-size:.6em">m</sub></div>
+      <div class="legend-def">Cobertura do modelo m — fração do poder explicativo presente no schema, ponderada pelo resultado clínico de cada variável. Escala 0–1 (exibida como 0–100%).</div>
+      <div class="legend-sym">w<sub style="font-size:.6em">i</sub></div>
+      <div class="legend-def">Peso da variável i no modelo m — proxy do coeficiente β do estudo de referência, normalizado para somar 100%.</div>
+      <div class="legend-sym">α<sub style="font-size:.6em">i</sub></div>
+      <div class="legend-def">Fator de estado clínico — varia de 0,0 (não informado) a 1,0 (em faixa de risco máxima). Encapsula o resultado clínico do dado, não apenas sua presença.</div>
+    </div>
+  </div>
+
+  <div class="formula-grid">
+    <div class="formula-block">
+      <h3>Escala de α — o que cada valor significa</h3>
+      <table class="alpha-table">
+        <thead><tr><th>α</th><th>Interpretação</th><th>Exemplo</th></tr></thead>
+        <tbody>
+          <tr><td class="td-alpha risk">1,0</td><td>Em faixa de risco confirmada (contribui 100% do peso)</td><td>IMC ≥ 30; PHQ-9 ≥ 10; PSA ≥ 4,0 ng/mL</td></tr>
+          <tr><td class="td-alpha risk">0,8–0,9</td><td>Faixa de risco alto, limítrofe superior</td><td>Pré-DM (HbA1c 5,7–6,4%); SAOS grave suspeita</td></tr>
+          <tr><td class="td-alpha mid">0,6–0,7</td><td>Faixa de risco moderado</td><td>Sobrepeso (IMC 25–29); TG 150–199 mg/dL</td></tr>
+          <tr><td class="td-alpha norm">0,3</td><td>Dado presente, resultado normal (não fator de risco)</td><td>IMC &lt; 25; PA ótima; PHQ-9 = 0–4</td></tr>
+          <tr><td class="td-alpha prot">0,1–0,2</td><td>Dado presente, resultado protetor ou neutro</td><td>HDL ≥ 60 mg/dL (protetor CV); nunca fumou</td></tr>
+          <tr><td style="font-family:'Syne',sans-serif;font-weight:800;color:#aaa;text-align:center">0,0</td><td>Não informado/ausente do schema</td><td>Padrão quando estado não selecionado</td></tr>
+        </tbody>
+      </table>
+      <p class="formula-note">A assimetria α = 1,0 (risco) vs. α = 0,3 (normal) é deliberada: dados normais informam o modelo mas não contribuem com sinal de risco. Um modelo com todos os dados presentes mas todos normais terá cobertura ≤ 30%.</p>
+    </div>
+    <div class="formula-block">
+      <h3>Diferença em relação à versão da fórmula sem adaptação ao contexto do Eles</h3>
+      <p style="margin-bottom:.8rem">Na <strong>v2</strong>, a fórmula era binária:</p>
+      <div style="background:#faf9f5;border:1px solid var(--rule);border-radius:3px;padding:.8rem 1rem;text-align:center;font-family:'Source Serif 4',serif;font-size:20px;margin-bottom:1rem">
+        C<sub style="font-size:.6em">m</sub> = ∑w<sub style="font-size:.6em">i∈S</sub> / ∑w<sub style="font-size:.6em">i∈Vm</sub>
+      </div>
+      <p style="margin-bottom:.8rem">Um dado presente sempre contribuía com seu peso total, independente de estar em faixa normal ou de risco. Isso tornava equivalentes um IMC 22 e um IMC 40, clinicamente inaceitável.</p>
+      <p>Na <strong>v3</strong>, o médico informa o resultado do dado, a informação de fato, não apenas se ele existe. O engine usa α para escalar a contribuição de acordo com a severidade clínica, derivada dos pontos de corte dos estudos originais.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── 2. MODELOS N1 ──────────────────────────────────────────────── -->
+<div class="section" id="n1">
+  <div class="section-head">
+    <h2>2. Modelos N1 — Inferências primárias</h2>
+    <span class="sh-note">16 modelos · Instrumentos validados individuais</span>
+  </div>
+
+  <div class="models-grid">
+
+    <!-- n1_obesidade -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Obesidade e perfil adiposo</span>
+        <span class="dom-tag dom-metabol">Metabolismo</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">IMC (kg/m²)</span><span class="var-w">35%<div class="var-bar"><div class="var-fill" style="width:100%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Circunferência abdominal</span><span class="var-w">25%<div class="var-bar"><div class="var-fill" style="width:71%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Peso desejado / objetivo</span><span class="var-w">15%<div class="var-bar"><div class="var-fill" style="width:43%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Atividade física</span><span class="var-w">15%<div class="var-bar"><div class="var-fill" style="width:43%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Variação de peso (6m)</span><span class="var-w">10%<div class="var-bar"><div class="var-fill" style="width:28%"></div></div></span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>ABESO 2022</strong> — Diretrizes Brasileiras de Obesidade, 4ª edição. <strong>IDF 2006</strong> — Consensus on Metabolic Syndrome (cutoff masculino: cintura >94cm).</p>
+          <p class="metric" style="margin-top:.5rem">Classificação direta; Sens 82% (circ. abd. para SM em homens)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">IMC subestima adiposidade em indivíduos musculosos. Circunferência abdominal >94cm em homens é preditor independente de risco cardiometabólico, superior ao IMC isolado. ABESO 2022 recomenda ambos.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_dm2 -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Risco de diabetes tipo 2 (FINDRISC)</span>
+        <span class="dom-tag dom-metabol">Metabolismo</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">Histórico glicemia alta</span><span class="var-w">25%<div class="var-bar"><div class="var-fill" style="width:100%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Histórico familiar DM2</span><span class="var-w">19%<div class="var-bar"><div class="var-fill" style="width:76%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">IMC</span><span class="var-w">18%<div class="var-bar"><div class="var-fill" style="width:72%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Atividade física</span><span class="var-w">15%<div class="var-bar"><div class="var-fill" style="width:60%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Anti-hipertensivo em uso</span><span class="var-w">12%<div class="var-bar"><div class="var-fill" style="width:48%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Idade</span><span class="var-w">11%<div class="var-bar"><div class="var-fill" style="width:44%"></div></div></span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Lindström & Tuomilehto 2003</strong>, Diabetes Care 26(3):725. <strong>Aschner et al. 2023</strong>, Front Endocrinol (n=47.267 LATAM). <strong>Conceição et al. 2020</strong> — validação BR.</p>
+          <p class="metric" style="margin-top:.5rem">AUC=0,76 · Sens 78–81% · Spec 76–77% · OR=63× para hist. glicemia alta em LATAM</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">LA-FINDRISC adapta cortes de circunferência para latinos. Desenvolvido na Finlândia — recalibração para contexto brasileiro é recomendada (SBD 2024). FINDRISC ≥12 = solicitação de glicemia + HbA1c.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_cardio -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Risco cardiovascular (Framingham)</span>
+        <span class="dom-tag dom-cardio">Cardiovascular</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">Pressão arterial</span><span class="var-w">28%<div class="var-bar"><div class="var-fill" style="width:100%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Colesterol total</span><span class="var-w">22%<div class="var-bar"><div class="var-fill" style="width:79%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Tabagismo</span><span class="var-w">14%<div class="var-bar"><div class="var-fill" style="width:50%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Diabetes</span><span class="var-w">14%<div class="var-bar"><div class="var-fill" style="width:50%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Idade</span><span class="var-w">14%<div class="var-bar"><div class="var-fill" style="width:50%"></div></div></span></div>
+            <div class="var-item"><span class="var-name">Anti-hipertensivo em uso</span><span class="var-w">8%<div class="var-bar"><div class="var-fill" style="width:29%"></div></div></span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>D'Agostino et al. 2008</strong>, Circulation 118(24):2400 — Framingham General CVD Risk Score. Validado em múltiplas coortes internacionais.</p>
+          <p class="metric" style="margin-top:.5rem">AUC=0,794 (IC95% 0,743–0,844)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">Desenvolvido em população EUA 1948–1971. Requer recalibração para contexto brasileiro. Válido para 30–74 anos sem DCV prévia. Para BR, preferir Escore de Risco Global SBC.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_sindrome_met_vars -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Componentes da síndrome metabólica</span>
+        <span class="dom-tag dom-metabol">Metabolismo</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos (5 critérios IDF/AHA/NHLBI)</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">Circunferência abdominal &gt;94cm</span><span class="var-w">22%</span></div>
+            <div class="var-item"><span class="var-name">Triglicerídeos ≥150 mg/dL</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">HDL &lt;40 mg/dL em homens</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">PA ≥130/85 mmHg</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">Glicemia ≥100 mg/dL</span><span class="var-w">18%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Alberti et al. 2009</strong>, Circulation 120(16):1640 — Joint Statement IDF/AHA/NHLBI. <strong>Mottillo et al. 2010</strong>, JACC 56(14):1113 (meta-análise n=951.083).</p>
+          <p class="metric" style="margin-top:.5rem">3/5 critérios: Sens 84%, Spec 78% · SM: RR=2,35 DCV; RR=5,17 DM2</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">Os 5 critérios têm pesos iguais na definição clínica. ≥3/5 = síndrome metabólica estabelecida. HDL elevado (protetor) recebe α=0,1 — não contribui como fator de risco; HDL baixo recebe α=1,0.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_resistencia_insulinica -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Resistência insulínica / hiperinsulinemia (HOMA-IR)</span>
+        <span class="dom-tag dom-metabol">Metabolismo</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">Insulina em jejum (µU/mL)</span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name">HbA1c (%)</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">Glicemia em jejum</span><span class="var-w">18%</span></div>
+            <div class="var-item"><span class="var-name">IMC</span><span class="var-w">12%</span></div>
+            <div class="var-item"><span class="var-name">IGF-1 sérico</span><span class="var-w">10%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Matthews et al. 1985</strong>, Diabetologia 28(7):412 (HOMA-IR). <strong>NCI Obesity & Cancer Fact Sheet 2024</strong>. <strong>Pollak 2012</strong>, Nat Rev Cancer 12(3):159 (IGF-1/insulina e tumorigênese).</p>
+          <p class="metric" style="margin-top:.5rem">HOMA-IR &gt;2,5: Sens 77%, Spec 67% · Hiperinsulinemia: OR=2,1–4,2 para cânceres CRC/pâncreas/rim</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">HOMA-IR = (insulina µU/mL × glicemia mg/dL) / 405. >2,5 = resistência insulínica. HOMA-IR não é marcador direto de câncer — é proxy mecanístico do elo insulina-tumorigênese.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_inflamacao_cronica -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Inflamação crônica de baixo grau</span>
+        <span class="dom-tag dom-metabol">Metabolismo</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">PCR-us &gt;3 mg/L</span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name">IMC</span><span class="var-w">22%</span></div>
+            <div class="var-item"><span class="var-name">Circunferência abdominal</span><span class="var-w">18%</span></div>
+            <div class="var-item"><span class="var-name">Adiponectina sérica</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Leucócitos totais</span><span class="var-w">10%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>ERFC 2010</strong>, JAMA 303(12):1187 (PCR e DCV, n=160.309). <strong>Hotamisligil 2017</strong>, Cell 171(1):34 (meta-inflamação e obesidade). <strong>Coussens & Werb 2002</strong>, Nature 420:860.</p>
+          <p class="metric" style="margin-top:.5rem">PCR-us &gt;3 mg/L: HR=1,78 para eventos CV (n=160.309) · Mecanismo: 13 tipos de câncer ligados à meta-inflamação (IARC 2020)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">PCR não é específico — infecções agudas e doenças autoimunes também elevam. Confirmar cronicidade (2 dosagens com intervalo ≥2 semanas). Adiponectina baixa em obesidade = perda do efeito antiproliferativo.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_depressao -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Triagem de depressão (PHQ-2/9)</span>
+        <span class="dom-tag dom-mental">Saúde Mental</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">PHQ-9 (0–27)</span><span class="var-w">45%</span></div>
+            <div class="var-item"><span class="var-name">PHQ-2 (0–6)</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">Diagnóstico de SM declarado</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">Medicação psiquiátrica em uso</span><span class="var-w">10%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Kroenke et al. 2003</strong>, Medical Care 41(11):1284 (PHQ-2). <strong>Kroenke & Spitzer 2001</strong> (PHQ-9). <strong>Moreno et al. 2016</strong> — validação BR PHQ-9.</p>
+          <p class="metric" style="margin-top:.5rem">PHQ-2≥3: Sens 83%, Spec 92% · PHQ-9: AUC=0,95 para depressão maior (validação BR)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat alert">⚠ Triagem apenas — não substitui avaliação psiquiátrica. Em populações com comorbidades físicas, especificidade pode ser menor (sintomas somáticos inflam score). PHQ-9≥10 = encaminhar psiquiatria.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_ansiedade -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Triagem de ansiedade (GAD-7)</span>
+        <span class="dom-tag dom-mental">Saúde Mental</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">GAD-7 (0–21)</span><span class="var-w">60%</span></div>
+            <div class="var-item"><span class="var-name">PSS-10 estresse percebido</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">Diagnóstico de SM declarado</span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Spitzer et al. 2006</strong>, Arch Intern Med 166(10):1092 (GAD-7). <strong>García-Batista 2018</strong> — validação em populações latino-americanas.</p>
+          <p class="metric" style="margin-top:.5rem">GAD-7≥10: Sens 89%, Spec 82% para TAG · AUC=0,91 em adultos LATAM</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">GAD-7 cobre TAG mas não todos os transtornos de ansiedade (pânico, fobia social). Em obesidade, sintomas somáticos podem inflar score. ISRS têm perfil metabólico favorável em obesos.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_sono -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Qualidade do sono e apneia (ISI)</span>
+        <span class="dom-tag dom-sono">Sono</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">Apneia — diagnóstico/suspeita</span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name">ISI — qualidade do sono</span><span class="var-w">28%</span></div>
+            <div class="var-item"><span class="var-name">Duração do sono (h/noite)</span><span class="var-w">22%</span></div>
+            <div class="var-item"><span class="var-name">Epworth — sonolência diurna</span><span class="var-w">12%</span></div>
+            <div class="var-item"><span class="var-name">Regularidade circadiana</span><span class="var-w">8%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>AASM Consensus 2015</strong>. <strong>Morin et al. 2011</strong>, Sleep 34(5):601 (ISI). <strong>Cappuccio et al. 2008</strong>, Sleep 31(5):619 (meta-análise n=634.511).</p>
+          <p class="metric" style="margin-top:.5rem">ISI: AUC=0,87 · SAOS+obesidade: OR=3,5 para progressão DM2 · &lt;6h/noite: OR=1,7 para obesidade</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">Sono auto-relatado tem baixa correlação com polissonografia (r=0,45–0,65). Wearables melhoram acurácia. CBTI é primeira linha para insônia — eficácia superior a medicamentos a longo prazo (AASM 2021).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_burnout -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Burnout ocupacional (fenotipagem digital)</span>
+        <span class="dom-tag dom-mental">Saúde Mental</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos (wearables passivos)</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">HRV crônica reduzida</span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name">Sono wearable degradado</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">Passos/dia &lt;5.000</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Uso noturno frequente</span><span class="var-w">12%</span></div>
+            <div class="var-item"><span class="var-name">Lentificação da digitação</span><span class="var-w">8%</span></div>
+            <div class="var-item"><span class="var-name">Irregularidade circadiana</span><span class="var-w">5%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Barac et al. 2024</strong>, JMIR 26:e50253 (wearables e burnout). <strong>PMC12655262 2025</strong> — IA passiva para stress/burnout. <strong>Maslach 2016</strong> (MBI — instrumento de referência).</p>
+          <p class="metric" style="margin-top:.5rem">HRV+sono degradados: Sens 71–83% para burnout em profissionais de saúde</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">Requer padrão longitudinal ≥4 semanas — valores pontuais têm baixa validade. Maioria dos estudos em profissionais de saúde. Burnout tem efeito metabólico real: cortisol crônico eleva glicemia e PA. LGPD obrigatório para dados passivos.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_elegib_glp1 -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Elegibilidade farmacológica GLP-1</span>
+        <span class="dom-tag dom-farmaco">Farmacologia</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">IMC (critério de indicação)</span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name">Gastroparesia (contraindicação)</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">Hist. familiar CMT/NEM-2</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Diagnóstico de SM</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Histórico de uso GLP-1</span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>FDA Ozempic 2021 / Mounjaro 2022</strong> — PI labels. <strong>SBD 2024</strong> / <strong>ABESO 2022</strong>. <strong>Davies et al. 2021</strong>, NEJM 384(11):989 (STEP 1). <strong>Jastreboff et al. 2022</strong>, NEJM 387(3):205 (SURMOUNT-1).</p>
+          <p class="metric" style="margin-top:.5rem">STEP 1: −14,9% peso (semaglutida 2,4mg) · SURMOUNT-1: −20,9% (tirzepatida 15mg)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat alert">⚠ Contraindicações absolutas: carcinoma medular da tireoide (CMT) pessoal ou familiar, NEM-2, pancreatite ativa, gastroparesia. Elegibilidade clínica exige avaliação médica completa — o engine mapeia sinais, não prescreve.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_prostata -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Risco de câncer de próstata</span>
+        <span class="dom-tag dom-onco">Oncologia</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">PSA total (ng/mL)</span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name">%PSA livre</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">Idade</span><span class="var-w">18%</span></div>
+            <div class="var-item"><span class="var-name">Histórico familiar próstata</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">DRE — toque retal</span><span class="var-w">7%</span></div>
+            <div class="var-item"><span class="var-name">IPSS — sintomas urinários</span><span class="var-w">5%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Ross et al. 2007</strong>, J Clin Oncol 25(24):3561 (nomograma, AUC=0,74–0,77). <strong>Barros et al. 2015</strong>, Anticancer Res 35(5):2881 — Hospital de Câncer de Barretos, n=1.313. <strong>AUA Guidelines 2023</strong>.</p>
+          <p class="metric" style="margin-top:.5rem">AUC=0,766 (nomograma Barretos) · PSA isolado: AUC=0,72 em atenção primária</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">PSA não é específico — HPB e prostatite também elevam. PSA 2,5–3,9 = "zona cinza" (α=0,6), não diagnóstico. Decisão de biópsia integra múltiplos fatores. Rastreamento: decisão compartilhada médico-paciente (INCA 2020).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_cancer_crc -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Risco de câncer colorretal (LiFeCRC / Kurth)</span>
+        <span class="dom-tag dom-onco">Oncologia</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">Idade</span><span class="var-w">28%</span></div>
+            <div class="var-item"><span class="var-name">Histórico familiar CRC</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">IMC</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Álcool (&gt;30g/dia)</span><span class="var-w">12%</span></div>
+            <div class="var-item"><span class="var-name">Tabagismo</span><span class="var-w">10%</span></div>
+            <div class="var-item"><span class="var-name">Carne vermelha/processada</span><span class="var-w">8%</span></div>
+            <div class="var-item"><span class="var-name">Atividade física</span><span class="var-w">5%</span></div>
+            <div class="var-item"><span class="var-name">FIT / sangue nas fezes</span><span class="var-w">2%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Ibáñez-Sanz et al. 2017</strong>, Sci Rep 7:3765 (LiFeCRC, EPIC n=138.000). <strong>Kurth et al. 2007</strong>, Am J Med 120(3):257 (PHS n=21.581, 20 anos). <strong>BMC Cancer 2025</strong> (LASSO+Cox, n=394.000).</p>
+          <p class="metric" style="margin-top:.5rem">LiFeCRC homens: AUC=0,76–0,77 (HUNT n=78.580) · Kurth lifestyle score: OR=15,29 (IC95% 6,19–37,81)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">LiFeCRC sem validação brasileira — extrapolação com reserva. FIT positivo é indicação direta de colonoscopia (não probabilidade de câncer). Alcohol e tabagismo têm efeito dose-dependente sem limiar seguro claro.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_distress_onco -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Distress oncológico (NCCN Distress Thermometer)</span>
+        <span class="dom-tag dom-mental">Saúde Mental</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">DT — Distress Thermometer (0–10)</span><span class="var-w">40%</span></div>
+            <div class="var-item"><span class="var-name">PHQ-9</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">FCR — Medo de recorrência</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">Suporte social percebido</span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Mitchell 2007</strong>, J Clin Oncol 25(29):4670 (meta-análise k=38 estudos). <strong>NCCN Guidelines Distress Management v2.2024</strong>. <strong>Ikhile et al. 2024</strong>, PLOS ONE (revisão sistemática fatores de risco).</p>
+          <p class="metric" style="margin-top:.5rem">DT≥4: Sens 77–82%, Spec 72–78% · 30–50% dos pacientes oncológicos com distress clinicamente relevante</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat alert">⚠ DT não distingue depressão de ansiedade de problemas práticos. DT≥4 exige avaliação psico-oncológica completa. Depressão em paciente oncológico aumenta mortalidade em 23–83% — não é secundária à condição física.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_qualidade_vida -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Qualidade de vida relacionada à saúde (SF-12/36)</span>
+        <span class="dom-tag dom-bemestar">Bem-estar</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">SF-12 / SF-36 (componente físico e mental)</span><span class="var-w">45%</span></div>
+            <div class="var-item"><span class="var-name">IIEF — disfunção erétil</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name">ISI — qualidade do sono</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Atividade física</span><span class="var-w">10%</span></div>
+            <div class="var-item"><span class="var-name">PSS-10 — estresse percebido</span><span class="var-w">5%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Ware & Sherbourne 1992</strong>, Medical Care 30(6):473 (SF-36 original). <strong>Kolotkin & Andersen 2017</strong>, Obes Rev 18(7):773 (revisão QVRS em obesidade, k=89 estudos).</p>
+          <p class="metric" style="margin-top:.5rem">SF-36: −8 a −15 pts (físico) em obesos vs. normopeso · Perda ≥5% peso: +4–7 pts SF-36 (STEP trials)</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">Variações culturais importantes na interpretação de scores. SF-12 mais breve mas menos sensível. Disfunção erétil afeta >50% dos obesos com SM — frequentemente resolve com perda de peso.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- n1_hiperinsulinemia_cancer -->
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n1">N1</span>
+        <span class="mname">Hiperinsulinemia e risco oncológico metabólico</span>
+        <span class="dom-tag dom-onco">Oncologia</span>
+      </div>
+      <div class="model-card-body">
+        <div class="model-col">
+          <h4>Variáveis e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name">IMC</span><span class="var-w">22%</span></div>
+            <div class="var-item"><span class="var-name">Insulina em jejum</span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name">Glicemia em jejum</span><span class="var-w">18%</span></div>
+            <div class="var-item"><span class="var-name">PCR-us &gt;3 mg/L</span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name">Triglicerídeos</span><span class="var-w">12%</span></div>
+            <div class="var-item"><span class="var-name">IGF-1 sérico</span><span class="var-w">8%</span></div>
+            <div class="var-item"><span class="var-name">Adiponectina sérica</span><span class="var-w">5%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Mahamat-Saleh et al. 2024</strong>, British J Cancer 131(9):1480 (IARC meta-análise, n=797.193 europeus, 31 cohort studies). <strong>NCI Obesity & Cancer Fact Sheet 2024</strong>. <strong>PMC10086630</strong> JNCI 2023.</p>
+          <p class="metric" style="margin-top:.5rem">MUOW/OB vs. MHNW: SRR=1,24 CRC · 1,42 tireoide · 1,71 rim · 1,35 pâncreas · 1,81 fígado</p>
+        </div>
+        <div class="model-col">
+          <h4>Caveat clínico</h4>
+          <p class="caveat">Fenótipo MUOW/OB (obeso metabolicamente doentio) é mais preditivo que IMC isolado. A combinação obesidade + disfunção metabólica supera o efeito da adiposidade isolada (MHOW/OB SRR=1,13 vs. MUOW/OB SRR=1,42). Associações epidemiológicas — não causalidade individual.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /models-grid N1 -->
+</div>
+
+<!-- ── 3. MODELOS N2 ──────────────────────────────────────────────── -->
+<div class="section" id="n2">
+  <div class="section-head">
+    <h2>3. Modelos N2 — Inferências compostas</h2>
+    <span class="sh-note">9 modelos · Composição de N1 e outros N2</span>
+  </div>
+
+  <div class="models-grid">
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Síndrome metabólica integrada</span>
+        <span class="dom-tag dom-metabol">Metabolismo</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_cardio</span> Risco cardiovascular</span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_dm2</span> Risco DM2</span><span class="var-w">28%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_sindrome_met</span> Componentes SM</span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_obesidade</span> Obesidade</span><span class="var-w">17%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Alberti 2009</strong>; <strong>GBD 2019</strong>, Lancet 396(10258):1204; <strong>Mottillo 2010</strong>, JACC 56(14):1113 (n=951.083).</p>
+          <p class="metric">AUC=0,82 para DCV 10 anos · SM: RR=2,35 DCV, RR=5,17 DM2</p>
+          <p class="caveat" style="margin-top:.5rem">Mínimo 2 entradas ativas (cobertura ≥5%). Composição com populações-alvo diferentes — incertezas se acumulam.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Saúde mental e emagrecimento</span>
+        <span class="dom-tag dom-mental">Psicossomático</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_depressao</span></span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_obesidade</span></span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_sono</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_ansiedade</span></span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Luppino et al. 2010</strong>, Arch Gen Psychiatry 67(3):220 (n=55.387). <strong>Lancet Psychiatry 2025</strong> — framework integrado MDD + obesidade.</p>
+          <p class="metric">Obesidade→depressão: OR=1,55 · Depressão→obesidade: OR=1,58 (bidirecional)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Risco cardiometabólico integrado</span>
+        <span class="dom-tag dom-cardio">Cardiovascular</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1+N2) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_cardio</span></span><span class="var-w">40%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sindrome_met</span></span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_dm2</span></span><span class="var-w">25%</span></div>
+          </div>
+          <p class="formula-note" style="margin-top:.8rem">⬆ Dependência cruzada N2→N2: requer múltiplos passes para resolução.</p>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>GBD 2019</strong>, Lancet 396:1204. <strong>ESC/EAS Guidelines 2021</strong>. <strong>SBC/SBD/ABESO Posicionamento Conjunto 2022</strong>.</p>
+          <p class="metric">AUC=0,78–0,84 para eventos CV em 10 anos</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Elegibilidade integrada para GLP-1</span>
+        <span class="dom-tag dom-farmaco">Farmacologia</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_elegib_glp1</span></span><span class="var-w">40%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_obesidade</span></span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_depressao</span></span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_sono</span></span><span class="var-w">10%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Davies 2021</strong> NEJM 384:989 (STEP 1). <strong>Jastreboff 2022</strong> NEJM 387:205 (SURMOUNT-1). <strong>SBD 2024; ABESO 2022</strong>.</p>
+          <p class="metric">STEP 1: −14,9% peso · SURMOUNT-1: −20,9% · Critério: IMC ≥30 ou ≥27 + comorbidade</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Sono e saúde mental integrados</span>
+        <span class="dom-tag dom-mental">Psicossomático</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_depressao</span></span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_sono</span></span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_ansiedade</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_burnout</span></span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Baglioni et al. 2016</strong>, Sleep Med Rev 30:75 (meta-análise k=21, n=172.077). <strong>AASM Clinical Practice Guidelines 2021</strong>.</p>
+          <p class="metric">Insônia → depressão: OR=2,10 (IC95% 1,86–2,38)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Obesidade metabólica e risco oncológico</span>
+        <span class="dom-tag dom-onco">Oncologia</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_hiperinsulinemia_cancer</span></span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_inflamacao_cronica</span></span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_sindrome_met_vars</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_obesidade</span></span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Mahamat-Saleh 2024</strong>, British J Cancer IARC (n=797.193). <strong>PMC10086630</strong> JNCI 2023. <strong>NCI 2024</strong>.</p>
+          <p class="metric">MUOW/OB: SRR=1,42 para cânceres relacionados à obesidade (vs. MHOW/OB SRR=1,13)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Depressão, ansiedade e prognóstico oncológico</span>
+        <span class="dom-tag dom-mental">Psico-oncologia</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_distress_onco</span></span><span class="var-w">35%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_depressao</span></span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_ansiedade</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_qualidade_vida</span></span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>van Tuijl et al. 2023</strong>, Cancer 129(20):3287 (PSY-CA IPD meta-análise). <strong>GeroScience 2025</strong> (meta-análise, 65 estudos).</p>
+          <p class="metric">Depressão pós-diagnóstico oncológico: +23–83% mortalidade · AUC PHQ-9 em câncer: 0,705–0,833</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Saúde psicossomática integrada</span>
+        <span class="dom-tag dom-mental">Psicossomático</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1+N2) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_saude_mental_peso</span></span><span class="var-w">40%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sono_mental</span></span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_qualidade_vida</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_inflamacao_cronica</span></span><span class="var-w">15%</span></div>
+          </div>
+          <p class="formula-note" style="margin-top:.8rem">⬆ Dependência cruzada N2→N2.</p>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>Lancet Psychiatry 2025</strong>. <strong>Luppino 2010</strong> (n=55.387). <strong>Ahmed et al. 2024</strong>, BMC Public Health 24:402 (n=16.366).</p>
+          <p class="metric">Obesidade+depressão: AOR=3,77 para multimorbidade — efeito sinérgico maior que a soma dos efeitos separados</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n2">N2</span>
+        <span class="mname">Risco integrado de câncer colorretal</span>
+        <span class="dom-tag dom-onco">Oncologia</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1+N2) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_cancer_crc</span></span><span class="var-w">40%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_hiperinsulinemia_cancer</span></span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_inflamacao_cronica</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sindrome_met</span></span><span class="var-w">15%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência e performance</h4>
+          <p><strong>LiFeCRC AUC=0,77</strong>; <strong>Kurth 2007 OR=15,29</strong>; <strong>PMC6639208</strong> (lifestyle score OR=5,82); <strong>BMC Cancer 2025</strong> (C-index=0,718, n=394.000).</p>
+          <p class="metric">Lifestyle score alto vs. baixo: OR=5,82 (IC95% 4,02–8,44) · C-index multimodal=0,718</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /models-grid N2 -->
+</div>
+
+<!-- ── 4. MODELOS N3 ──────────────────────────────────────────────── -->
+<div class="section" id="n3">
+  <div class="section-head">
+    <h2>4. Modelos N3 — Meta-inferências</h2>
+    <span class="sh-note">4 modelos · Síntese clínica de mais alta ordem</span>
+  </div>
+
+  <div class="models-grid">
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n3">N3</span>
+        <span class="mname">Perfil de saúde masculina 360°</span>
+        <span class="dom-tag dom-metabol">Meta-inferência</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N2) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sindrome_met</span></span><span class="var-w">28%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_saude_mental_peso</span></span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_risco_cardiomet</span></span><span class="var-w">22%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_elegib_completa</span></span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sono_mental</span></span><span class="var-w">10%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência, performance e caveat</h4>
+          <p><strong>WHO NCD Action Plan 2013–2030</strong>. <strong>Look AHEAD Research Group</strong>, NEJM 2012;369(2):145 (n=5.145, 8 anos).</p>
+          <p class="metric">−34–38% erro de estratificação vs. modelos unidimensionais</p>
+          <p class="caveat" style="margin-top:.5rem">Meta-inferência: incertezas se acumulam em cada nível. Alta cobertura indica schema abrangente — não certeza diagnóstica. Interpretação clínica obrigatória.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n3">N3</span>
+        <span class="mname">Risco oncológico integrado</span>
+        <span class="dom-tag dom-onco">Oncologia / Meta-inferência</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1+N2) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_obesidade_cancer</span></span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_cancer_crc_integrado</span></span><span class="var-w">28%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_prostata</span></span><span class="var-w">20%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_hiperinsulinemia_cancer</span></span><span class="var-w">14%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_depressao_cancer</span></span><span class="var-w">8%</span></div>
+          </div>
+        </div>
+        <div class="model-col">
+          <h4>Referência, performance e caveat</h4>
+          <p><strong>IARC World Cancer Report 2020</strong>. <strong>NCI 2024</strong>. <strong>GeroScience 2025</strong>. <strong>BMC Cancer 2025</strong> (C-index=0,718, n=394.000).</p>
+          <p class="metric">C-index multimodal=0,718 · Depressão: +23–83% mortalidade oncológica</p>
+          <p class="caveat" style="margin-top:.5rem">Não substitui estadiamento oncológico ou avaliação clínica especializada. Útil para estratificação preventiva e priorização de rastreamento.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n3">N3</span>
+        <span class="mname">Carga de doença mental-metabólica integrada</span>
+        <span class="dom-tag dom-mental">Psicossomático / Meta-inferência</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N1+N2) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_psicossomatico_integrado</span></span><span class="var-w">32%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sindrome_met</span></span><span class="var-w">25%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_sono_mental</span></span><span class="var-w">18%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n1">n1_qualidade_vida</span></span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_elegib_completa</span></span><span class="var-w">10%</span></div>
+          </div>
+          <p class="formula-note" style="margin-top:.5rem">Mínimo 3 entradas ativas — threshold mais alto por ser meta-inferência de alta carga.</p>
+        </div>
+        <div class="model-col">
+          <h4>Referência, performance e caveat</h4>
+          <p><strong>GBD 2019</strong>, Lancet Psychiatry. <strong>Lancet Psychiatry 2025</strong>. <strong>Ahmed et al. 2024</strong>, BMC Public Health (n=16.366).</p>
+          <p class="metric">AOR=3,77 multimorbidade (obesidade+depressão) · GBD: depressão+DM2 = 8,5% dos DALYs globais</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-head">
+        <span class="mnbadge n3">N3</span>
+        <span class="mname">Viabilidade terapêutica e plano de cuidado global</span>
+        <span class="dom-tag dom-farmaco">Clínica Integrativa / Meta-inferência</span>
+      </div>
+      <div class="model-card-body" style="grid-template-columns:1fr 1fr">
+        <div class="model-col">
+          <h4>Entradas (N2+N3) e pesos</h4>
+          <div class="var-list">
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n3">n3_saude_masc_360</span></span><span class="var-w">30%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n3">n3_carga_doenca_mental</span></span><span class="var-w">28%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_elegib_completa</span></span><span class="var-w">18%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n2">n2_risco_cardiomet</span></span><span class="var-w">15%</span></div>
+            <div class="var-item"><span class="var-name"><span class="need-tag need-n3">n3_risco_oncologico</span></span><span class="var-w">9%</span></div>
+          </div>
+          <p class="formula-note" style="margin-top:.5rem">⬆ Único modelo do engine com entradas N3→N3. Requer algoritmo de 3 passes iterativos para resolução.</p>
+        </div>
+        <div class="model-col">
+          <h4>Referência, performance e caveat</h4>
+          <p><strong>Look AHEAD</strong>, NEJM 2012;369:145 (n=5.145, 8 anos). <strong>STEP 1</strong>, Davies 2021 NEJM. <strong>NCCN 2024</strong>.</p>
+          <p class="metric">Look AHEAD: melhora simultânea HbA1c, PA, QV e depressão · Meta-inferência de mais alta ordem do engine</p>
+          <p class="caveat" style="margin-top:.5rem">Alta cobertura neste N3 indica que o médico tem informação suficiente para um plano de tratamento integrado completo — não que o tratamento será necessariamente indicado.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /models-grid N3 -->
+</div>
+
+<!-- ── 5. ESTADOS CLÍNICOS ────────────────────────────────────────── -->
+<div class="section" id="estados">
+  <div class="section-head">
+    <h2>5. Estados clínicos e faixas com α (seleção)</h2>
+    <span class="sh-note">Pontos de corte derivados dos estudos originais</span>
+  </div>
+
+  <p style="margin-bottom:1.5rem;font-size:14px;color:#444">Os estados abaixo representam os dados de maior peso nos modelos N1. As faixas de α são derivadas diretamente dos pontos de corte dos estudos de validação referenciados — não são escolhas arbitrárias do engine.</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Variável</th>
+        <th>Estado / Faixa</th>
+        <th style="text-align:center">α</th>
+        <th>Fonte da faixa</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="4" class="cat-group-label">Antropometria / Metabólico</td></tr>
+      <tr><td class="td-var" rowspan="5">IMC (kg/m²)</td><td>&lt;25 — normal</td><td class="td-alpha norm">0,3</td><td class="td-source">ABESO 2022; WHO</td></tr>
+      <tr><td>25–29 — sobrepeso</td><td class="td-alpha mid">0,6</td><td class="td-source">ABESO 2022; WHO</td></tr>
+      <tr><td>30–34 — obeso grau I</td><td class="td-alpha risk">1,0</td><td class="td-source">ABESO 2022; IDF 2006</td></tr>
+      <tr><td>35–39 — obeso grau II</td><td class="td-alpha risk">1,0</td><td class="td-source">ABESO 2022</td></tr>
+      <tr><td>≥40 — obeso grau III</td><td class="td-alpha risk">1,0</td><td class="td-source">ABESO 2022; CFM 2131/2015</td></tr>
+
+      <tr><td class="td-var" rowspan="3">Circunferência abdominal</td><td>&lt;94cm — normal (homens)</td><td class="td-alpha norm">0,3</td><td class="td-source">IDF 2006 (cutoff masculino)</td></tr>
+      <tr><td>94–101cm — risco</td><td class="td-alpha mid">0,7</td><td class="td-source">IDF 2006</td></tr>
+      <tr><td>≥102cm — risco alto</td><td class="td-alpha risk">1,0</td><td class="td-source">IDF 2006; AHA/NHLBI</td></tr>
+
+      <tr><td class="td-var" rowspan="3">Glicemia em jejum (mg/dL)</td><td>&lt;100 — normal</td><td class="td-alpha norm">0,3</td><td class="td-source">ADA 2024; SBD 2024</td></tr>
+      <tr><td>100–125 — pré-diabetes</td><td class="td-alpha mid">0,8</td><td class="td-source">ADA 2024</td></tr>
+      <tr><td>≥126 — diabetes tipo 2</td><td class="td-alpha risk">1,0</td><td class="td-source">ADA 2024; SBD 2024</td></tr>
+
+      <tr><td class="td-var" rowspan="3">HbA1c (%)</td><td>&lt;5,7% — normal</td><td class="td-alpha norm">0,3</td><td class="td-source">ADA 2024</td></tr>
+      <tr><td>5,7–6,4% — pré-diabetes</td><td class="td-alpha mid">0,8</td><td class="td-source">ADA 2024</td></tr>
+      <tr><td>≥6,5% — diabetes tipo 2</td><td class="td-alpha risk">1,0</td><td class="td-source">ADA 2024; SBD 2024</td></tr>
+
+      <tr><td class="td-var" rowspan="3">HDL (mg/dL) — caso especial</td><td>≥60 — <em>protetor</em></td><td class="td-alpha prot">0,1</td><td class="td-source">Framingham; AHA (protetor CV)</td></tr>
+      <tr><td>41–59 — normal-baixo</td><td class="td-alpha norm">0,3</td><td class="td-source">AHA/NHLBI</td></tr>
+      <tr><td>≤40 — risco SM (homens)</td><td class="td-alpha risk">1,0</td><td class="td-source">IDF 2006; Alberti 2009</td></tr>
+
+      <tr><td class="td-var" rowspan="3">Insulina em jejum (µU/mL)</td><td>&lt;10 — normal</td><td class="td-alpha norm">0,3</td><td class="td-source">Matthews 1985 (HOMA-IR)</td></tr>
+      <tr><td>10–15 — limítrofe</td><td class="td-alpha mid">0,7</td><td class="td-source">Matthews 1985</td></tr>
+      <tr><td>&gt;15 — hiperinsulinemia</td><td class="td-alpha risk">1,0</td><td class="td-source">Matthews 1985; NCI 2024</td></tr>
+
+      <tr><td class="td-var" rowspan="3">PCR-us (mg/L)</td><td>&lt;1 — baixo risco</td><td class="td-alpha prot">0,2</td><td class="td-source">ERFC 2010; Ridker 2003</td></tr>
+      <tr><td>1–3 — moderado</td><td class="td-alpha mid">0,5</td><td class="td-source">ERFC 2010</td></tr>
+      <tr><td>&gt;3 — inflamação crônica</td><td class="td-alpha risk">1,0</td><td class="td-source">ERFC 2010, JAMA (n=160.309)</td></tr>
+
+      <tr><td colspan="4" class="cat-group-label">Cardiovascular</td></tr>
+      <tr><td class="td-var" rowspan="4">Pressão arterial (mmHg)</td><td>&lt;120/80 — ótima</td><td class="td-alpha prot">0,1</td><td class="td-source">AHA 2017</td></tr>
+      <tr><td>120–129 / &lt;80 — normal</td><td class="td-alpha norm">0,3</td><td class="td-source">AHA 2017</td></tr>
+      <tr><td>130–139 / 80–89 — estágio 1</td><td class="td-alpha mid">0,8</td><td class="td-source">AHA 2017</td></tr>
+      <tr><td>≥140/90 — estágio 2</td><td class="td-alpha risk">1,0</td><td class="td-source">AHA 2017; ESC 2018</td></tr>
+
+      <tr><td class="td-var" rowspan="4">Tabagismo</td><td>Nunca fumou</td><td class="td-alpha prot">0,1</td><td class="td-source">Framingham 2008</td></tr>
+      <tr><td>Ex-fumante &gt;5 anos</td><td class="td-alpha norm">0,3</td><td class="td-source">Framingham 2008</td></tr>
+      <tr><td>Ex-fumante &lt;5 anos</td><td class="td-alpha mid">0,7</td><td class="td-source">Framingham 2008</td></tr>
+      <tr><td>Fumante atual</td><td class="td-alpha risk">1,0</td><td class="td-source">Framingham 2008</td></tr>
+
+      <tr><td colspan="4" class="cat-group-label">Saúde Mental</td></tr>
+      <tr><td class="td-var" rowspan="4">PHQ-9 (0–27)</td><td>0–4 — sem depressão</td><td class="td-alpha norm">0,3</td><td class="td-source">Kroenke et al. 2001</td></tr>
+      <tr><td>5–9 — leve</td><td class="td-alpha mid">0,7</td><td class="td-source">Kroenke et al. 2001</td></tr>
+      <tr><td>10–14 — moderada</td><td class="td-alpha risk" style="color:var(--farmaco)">0,9</td><td class="td-source">Kroenke et al. 2001</td></tr>
+      <tr><td>15–27 — grave a muito grave</td><td class="td-alpha risk">1,0</td><td class="td-source">Kroenke et al. 2001</td></tr>
+
+      <tr><td class="td-var" rowspan="4">ISI — Insomnia Severity Index (0–28)</td><td>0–7 — sem insônia</td><td class="td-alpha norm">0,3</td><td class="td-source">Morin 2011</td></tr>
+      <tr><td>8–14 — insônia subclínica</td><td class="td-alpha mid">0,7</td><td class="td-source">Morin 2011</td></tr>
+      <tr><td>15–21 — insônia moderada</td><td class="td-alpha risk" style="color:var(--farmaco)">0,9</td><td class="td-source">Morin 2011</td></tr>
+      <tr><td>22–28 — insônia grave</td><td class="td-alpha risk">1,0</td><td class="td-source">Morin 2011</td></tr>
+
+      <tr><td class="td-var" rowspan="3">DT — Distress Thermometer (0–10)</td><td>0–3 — baixo</td><td class="td-alpha norm">0,3</td><td class="td-source">NCCN Guidelines; Mitchell 2007</td></tr>
+      <tr><td>4–6 — moderado</td><td class="td-alpha mid">0,8</td><td class="td-source">NCCN (limiar de intervenção)</td></tr>
+      <tr><td>7–10 — alto</td><td class="td-alpha risk">1,0</td><td class="td-source">Mitchell 2007 (Sens 77–82%)</td></tr>
+
+      <tr><td colspan="4" class="cat-group-label">Oncológico</td></tr>
+      <tr><td class="td-var" rowspan="4">PSA total (ng/mL)</td><td>&lt;2,5 — baixo risco</td><td class="td-alpha prot">0,2</td><td class="td-source">AUA Guidelines 2023</td></tr>
+      <tr><td>2,5–3,9 — zona cinza</td><td class="td-alpha mid">0,6</td><td class="td-source">AUA 2023 (investigação individualizada)</td></tr>
+      <tr><td>4,0–9,9 — elevado</td><td class="td-alpha risk" style="color:var(--farmaco)">0,9</td><td class="td-source">AUA 2023; INCA 2020</td></tr>
+      <tr><td>≥10 — muito elevado</td><td class="td-alpha risk">1,0</td><td class="td-source">AUA 2023</td></tr>
+
+      <tr><td class="td-var" rowspan="3">Histórico familiar CRC</td><td>Sem histórico</td><td class="td-alpha prot">0,1</td><td class="td-source">Butterworth 2006; USPSTF 2021</td></tr>
+      <tr><td>1 familiar afetado &gt;60 anos</td><td class="td-alpha mid">0,6</td><td class="td-source">Butterworth 2006</td></tr>
+      <tr><td>1 familiar &lt;60 anos ou ≥2 familiares</td><td class="td-alpha risk">1,0</td><td class="td-source">Butterworth 2006; USPSTF 2021</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── 6. PROPAGAÇÃO ──────────────────────────────────────────────── -->
+<div class="section" id="propagacao">
+  <div class="section-head">
+    <h2>6. Algoritmo de propagação N1→N2→N3</h2>
+    <span class="sh-note">3 passes iterativos por nível</span>
+  </div>
+
+  <div class="formula-grid">
+    <div class="formula-block">
+      <h3>Por que múltiplos passes?</h3>
+      <p>Modelos N2 podem depender de outros N2 (<em>ex.:</em> <code>n2_psicossomático_integrado</code> depende de <code>n2_saúde_mental_peso</code> e <code>n2_sono_mental</code>). Modelos N3 podem depender de outros N3 (<em>ex.:</em> <code>n3_viabilidade_terapêutica_global</code> depende de três outros N3).</p>
+      <p>Um único passe resolveria dependências apenas para nós calculados antes na ordem de definição. Três passes garantem convergência independente da ordem.</p>
+    </div>
+    <div class="formula-block">
+      <h3>Limiar de ativação τ = 0,05 (significância estatística)</h3>
+      <p>Um nó (N1, N2 ou N3) só é considerado "ativo" para alimentar um modelo composto se sua cobertura ≥ 5%. Isso evita que um único dado normal (α = 0,3) com peso muito pequeno ative modelos compostos indevidamente.</p>
+      <p>O parâmetro <code>min</code> de cada modelo indica o mínimo de entradas ativas necessárias; <code>n3_carga_doença_mental_metabólica</code> requer mínimo 3, por exemplo.</p>
+    </div>
+  </div>
+
+  <div class="formula-block" style="margin-bottom:1.5rem">
+    <h3>Lookup cross-level: getCov(id)</h3>
+    <p>A função de cobertura busca um nó em todas as camadas — c1 (N1), c2 (N2), c3 (N3) — nessa ordem. Isso permite que modelos N3 referenciem diretamente modelos N1 como entradas sem precisar de um N2 intermediário, como ocorre em <code>n3_risco_oncológico_integrado</code> que inclui <code>n1_prostata</code> e <code>n1_hiperinsulinemia_cancer</code> diretamente.</p>
+  </div>
+</div>
+
+<!-- ── 7. REFERÊNCIAS ─────────────────────────────────────────────── -->
+<div class="section" id="refs">
+  <div class="section-head">
+    <h2>7. Referências bibliográficas completas</h2>
+    <span class="sh-note">50+ referências · Base revisada por pares</span>
+  </div>
+
+  <table class="ref-table">
+    <thead>
+      <tr>
+        <th style="width:110px">Código</th>
+        <th>Citação completa</th>
+        <th style="width:160px">Métrica-chave</th>
+        <th style="width:200px">Uso no engine</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr><td colspan="4" class="cat-group-label">Obesidade e Síndrome Metabólica</td></tr>
+      <tr>
+        <td class="rcode">ABESO22</td>
+        <td class="rcite">ABESO — Associação Brasileira para o Estudo da Obesidade. <em>Diretrizes Brasileiras de Obesidade 2022.</em> 4ª edição. São Paulo: ABESO, 2022.</td>
+        <td class="rmetric">Classificação direta por IMC e cintura</td>
+        <td class="ruse">Pesos e faixas de n1_obesidade. Cutoffs IMC e circunferência abdominal masculina.</td>
+      </tr>
+      <tr>
+        <td class="rcode">IDF06</td>
+        <td class="rcite">International Diabetes Federation. <em>The IDF Consensus Worldwide Definition of the Metabolic Syndrome.</em> Brussels: IDF, 2006.</td>
+        <td class="rmetric">Cintura >94cm homens: Sens 82% para SM</td>
+        <td class="ruse">Cutoffs de circunferência abdominal e critérios SM em n1_obesidade, n1_sindrome_met_vars.</td>
+      </tr>
+      <tr>
+        <td class="rcode">ALBERTI09</td>
+        <td class="rcite">Alberti KGMM et al. "Harmonizing the metabolic syndrome." <em>Circulation</em> 2009;120(16):1640–1645. IDF/AHA/NHLBI Joint Statement.</td>
+        <td class="rmetric">3/5 critérios: Sens 84%, Spec 78%</td>
+        <td class="ruse">Definição e 5 critérios de n1_sindrome_met_vars. Referência para n2_sindrome_met.</td>
+      </tr>
+      <tr>
+        <td class="rcode">MOTTILLO10</td>
+        <td class="rcite">Mottillo S et al. "The metabolic syndrome and cardiovascular risk: A systematic review and meta-analysis." <em>JACC</em> 2010;56(14):1113–1132. n=951.083.</td>
+        <td class="rmetric">SM: RR=2,35 DCV; RR=5,17 DM2</td>
+        <td class="ruse">Performance reportada para n2_sindrome_met.</td>
+      </tr>
+
+      <tr><td colspan="4" class="cat-group-label">Diabetes e Resistência Insulínica</td></tr>
+      <tr>
+        <td class="rcode">LINDSTROM03</td>
+        <td class="rcite">Lindström J & Tuomilehto J. "The diabetes risk score: a practical tool to predict type 2 diabetes risk." <em>Diabetes Care</em> 2003;26(3):725–731.</td>
+        <td class="rmetric">AUC=0,76; Sens 78–81%, Spec 76–77%</td>
+        <td class="ruse">Pesos originais FINDRISC para n1_dm2. Base do sistema de pontuação.</td>
+      </tr>
+      <tr>
+        <td class="rcode">ASCHNER23</td>
+        <td class="rcite">Aschner P et al. "Validation of LA-FINDRISC for Latin America." <em>Front Endocrinol</em> 2023;14:1188784. n=47.267.</td>
+        <td class="rmetric">OR=63× para hist. glicemia alta; OR=38× para hist. familiar DM</td>
+        <td class="ruse">Odds ratios para pesos LATAM de n1_dm2. Recalibração para contexto latino-americano.</td>
+      </tr>
+      <tr>
+        <td class="rcode">MATTHEWS85</td>
+        <td class="rcite">Matthews DR et al. "Homeostasis model assessment: insulin resistance and beta-cell function from fasting plasma glucose and insulin concentrations in man." <em>Diabetologia</em> 1985;28(7):412–419.</td>
+        <td class="rmetric">HOMA-IR >2,5: Sens 77%, Spec 67% para SM</td>
+        <td class="ruse">Fórmula HOMA-IR, cutoffs e faixas de α para n1_resistencia_insulinica. Faixas de insulina em jejum.</td>
+      </tr>
+      <tr>
+        <td class="rcode">POLLAK12</td>
+        <td class="rcite">Pollak M. "The insulin and insulin-like growth factor receptor family in neoplasia: an update." <em>Nat Rev Cancer</em> 2012;12(3):159–169.</td>
+        <td class="rmetric">Insulina/IGF-1: OR=2,1–4,2 para cânceres CRC/pâncreas/rim</td>
+        <td class="ruse">Fundamentação mecanística do elo insulina-câncer em n1_resistencia_insulinica e n1_hiperinsulinemia_cancer.</td>
+      </tr>
+
+      <tr><td colspan="4" class="cat-group-label">Cardiovascular</td></tr>
+      <tr>
+        <td class="rcode">DAGOSTINO08</td>
+        <td class="rcite">D'Agostino RB et al. "General cardiovascular risk profile for use in primary care: the Framingham Heart Study." <em>Circulation</em> 2008;118(24):2400–2407.</td>
+        <td class="rmetric">AUC=0,794 (IC95% 0,743–0,844)</td>
+        <td class="ruse">Pesos β do modelo n1_cardio (PA β=1,65; colesterol β=0,94; HDL β=−0,88). Referência principal.</td>
+      </tr>
+      <tr>
+        <td class="rcode">ERFC10</td>
+        <td class="rcite">Emerging Risk Factors Collaboration. "C-reactive protein concentration and risk of coronary heart disease, stroke, and mortality." <em>JAMA</em> 2010;303(12):1187–1197. n=160.309.</td>
+        <td class="rmetric">PCR >3 mg/L: HR=1,78 para eventos CV</td>
+        <td class="ruse">Faixas de α e performance para n1_inflamacao_cronica. Cutoffs de PCR-us.</td>
+      </tr>
+
+      <tr><td colspan="4" class="cat-group-label">Saúde Mental</td></tr>
+      <tr>
+        <td class="rcode">KROENKE03</td>
+        <td class="rcite">Kroenke K & Spitzer RL. "The PHQ-9: Validity of a brief depression severity measure." <em>Medical Care</em> 2003;41(11):1284–1292.</td>
+        <td class="rmetric">PHQ-2≥3: Sens 83%, Spec 92% · PHQ-9: AUC=0,95</td>
+        <td class="ruse">Pesos e faixas de α para n1_depressao. Cutoffs PHQ-2 e PHQ-9.</td>
+      </tr>
+      <tr>
+        <td class="rcode">SPITZER06</td>
+        <td class="rcite">Spitzer RL et al. "A brief measure for assessing generalized anxiety disorder." <em>Arch Intern Med</em> 2006;166(10):1092–1097.</td>
+        <td class="rmetric">GAD-7≥10: Sens 89%, Spec 82%</td>
+        <td class="ruse">Pesos e faixas de α para n1_ansiedade. Cutoff GAD-7.</td>
+      </tr>
+      <tr>
+        <td class="rcode">GARCIA18</td>
+        <td class="rcite">García-Batista ZE et al. "Validity and reliability of the GAD-7 for use in Spanish-speaking general population." <em>PloS One</em> 2018;13(10):e0206426. LATAM.</td>
+        <td class="rmetric">AUC=0,91 em adultos latino-americanos</td>
+        <td class="ruse">Valida GAD-7 em contexto LATAM para n1_ansiedade.</td>
+      </tr>
+      <tr>
+        <td class="rcode">LUPPINO10</td>
+        <td class="rcite">Luppino FS et al. "Overweight, obesity, and depression: a systematic review and meta-analysis of longitudinal studies." <em>Arch Gen Psychiatry</em> 2010;67(3):220–229. n=58.745.</td>
+        <td class="rmetric">Obesidade→depressão: OR=1,55 · Depressão→obesidade: OR=1,58</td>
+        <td class="ruse">Base epidemiológica de n2_saude_mental_peso. Bidirecionalidade obesidade-depressão.</td>
+      </tr>
+      <tr>
+        <td class="rcode">BAGLIONI16</td>
+        <td class="rcite">Baglioni C et al. "Insomnia as a predictor of depression: A meta-analytic evaluation of longitudinal epidemiological studies." <em>Sleep Med Rev</em> 2016;30:75–85. k=21 estudos, n=172.077.</td>
+        <td class="rmetric">OR=2,10 (IC95% 1,86–2,38)</td>
+        <td class="ruse">Base epidemiológica de n2_sono_mental. Causalidade insônia→depressão.</td>
+      </tr>
+      <tr>
+        <td class="rcode">LANCETPSY25</td>
+        <td class="rcite">Lancet Psychiatry. "Clinical management of major depressive disorder with comorbid obesity." <em>Lancet Psychiatry</em> 2025.</td>
+        <td class="rmetric">Framework integrado MDD+obesidade</td>
+        <td class="ruse">Base de n2_saude_mental_peso e n2_psicossomatico_integrado. Framework de tratamento paralelo.</td>
+      </tr>
+      <tr>
+        <td class="rcode">AHMED24</td>
+        <td class="rcite">Ahmed T et al. "Interaction between depressive symptoms and obesity-measures on multimorbidity in older adults." <em>BMC Public Health</em> 2024;24:402. n=16.366.</td>
+        <td class="rmetric">AOR=3,77 para multimorbidade (obesos+deprimidos)</td>
+        <td class="ruse">Performance de n2_psicossomatico_integrado e n3_carga_doenca_mental_metabolica.</td>
+      </tr>
+      <tr>
+        <td class="rcode">BARAC24</td>
+        <td class="rcite">Barac EF et al. "Wearable-based machine learning approach for burnout detection." <em>JMIR</em> 2024;26:e50253.</td>
+        <td class="rmetric">Sens 71–83% (HRV + sono degradados)</td>
+        <td class="ruse">Pesos e performance de n1_burnout. Biomarcadores passivos de burnout ocupacional.</td>
+      </tr>
+      <tr>
+        <td class="rcode">MORIN11</td>
+        <td class="rcite">Morin CM et al. "The Insomnia Severity Index: psychometric indicators to detect insomnia cases and evaluate treatment response." <em>Sleep</em> 2011;34(5):601–608.</td>
+        <td class="rmetric">ISI: AUC=0,87</td>
+        <td class="ruse">Faixas de α do ISI em n1_sono (0–7 sem insônia; 8–14 subclínica; 15–21 moderada; 22–28 grave).</td>
+      </tr>
+      <tr>
+        <td class="rcode">CAPPUCCIO08</td>
+        <td class="rcite">Cappuccio FP et al. "Meta-analysis of short sleep duration and obesity in children and adults." <em>Sleep</em> 2008;31(5):619–626. n=634.511.</td>
+        <td class="rmetric">&lt;6h/noite: OR=1,7 para obesidade</td>
+        <td class="ruse">Cutoff de duração de sono em n1_sono (&lt;6h → α=1,0).</td>
+      </tr>
+
+      <tr><td colspan="4" class="cat-group-label">Oncologia</td></tr>
+      <tr>
+        <td class="rcode">IBANEZSANZ17</td>
+        <td class="rcite">Ibáñez-Sanz G et al. "Risk model for colorectal cancer in Spanish population using environmental and genetic factors: EPICOLON." <em>Sci Rep</em> 2017;7:3765. (LiFeCRC, EPIC n=138.000).</td>
+        <td class="rmetric">AUC=0,76–0,77 (homens, HUNT validation n=78.580)</td>
+        <td class="ruse">Base principal de n1_cancer_crc e n2_cancer_crc_integrado. Variáveis e pesos do LiFeCRC.</td>
+      </tr>
+      <tr>
+        <td class="rcode">KURTH07</td>
+        <td class="rcite">Kurth T et al. "Development of a risk score for colorectal cancer in men." <em>Am J Med</em> 2007;120(3):257–263. Physicians Health Study, n=21.581, 20 anos de follow-up.</td>
+        <td class="rmetric">OR=15,29 (IC95% 6,19–37,81) para quintil mais alto vs. mais baixo</td>
+        <td class="ruse">Lifestyle risk score de n1_cancer_crc. Performance de discriminação.</td>
+      </tr>
+      <tr>
+        <td class="rcode">BMCCANCER25</td>
+        <td class="rcite">Haam JH et al. "Development and validation of a 10-year CRC risk prediction model using LASSO+Cox." <em>BMC Cancer</em> 2025;25(14674). NHIS n=394.000.</td>
+        <td class="rmetric">C-index=0,60–0,70 (demographic); C-index=0,718 (full model)</td>
+        <td class="ruse">C-index reportado para n2_cancer_crc_integrado. Variáveis do modelo completo.</td>
+      </tr>
+      <tr>
+        <td class="rcode">MAHAMAT24</td>
+        <td class="rcite">Mahamat-Saleh Y et al. "Association of metabolic obesity phenotypes with risk of overall and site-specific cancers." <em>British J Cancer</em> 2024;131(9):1480–1495. IARC meta-análise, n=797.193 europeus, 31 coortes.</td>
+        <td class="rmetric">MUOW/OB: SRR=1,24 CRC · 1,42 tireoide · 1,71 rim · 1,81 fígado</td>
+        <td class="ruse">Pesos e performance de n1_hiperinsulinemia_cancer e n2_obesidade_cancer. SRRs por tipo de câncer.</td>
+      </tr>
+      <tr>
+        <td class="rcode">ROSS07</td>
+        <td class="rcite">Ross RW et al. "A nomogram for predicting the likelihood of additional nodal involvement for prostate cancer patients with a positive sentinel node biopsy." <em>J Clin Oncol</em> 2007;25(24):3561–3567.</td>
+        <td class="rmetric">AUC=0,74–0,77</td>
+        <td class="ruse">Base do nomograma de próstata para n1_prostata.</td>
+      </tr>
+      <tr>
+        <td class="rcode">BARROS15</td>
+        <td class="rcite">Barros M et al. "Development and validation of a prognostic model for prostate cancer in a Brazilian hospital." <em>Anticancer Res</em> 2015;35(5):2881–2887. Hospital de Câncer de Barretos, n=1.313.</td>
+        <td class="rmetric">AUC=0,766</td>
+        <td class="ruse">Validação do nomograma em contexto brasileiro para n1_prostata. Única referência com validação BR no engine.</td>
+      </tr>
+      <tr>
+        <td class="rcode">MITCHELL07</td>
+        <td class="rcite">Mitchell AJ. "Pooled results from 38 analyses of the Distress Thermometer." <em>J Clin Oncol</em> 2007;25(29):4670–4681. Meta-análise k=38 estudos.</td>
+        <td class="rmetric">DT≥4: Sens 77–82%, Spec 72–78%</td>
+        <td class="ruse">Faixas de α do DT e performance de n1_distress_onco.</td>
+      </tr>
+      <tr>
+        <td class="rcode">VANTUIJL23</td>
+        <td class="rcite">van Tuijl LA et al. "Depression, anxiety, and the risk of cancer." <em>Cancer</em> 2023;129(20):3287–3299. PSY-CA consortium, IPD meta-análise n&gt;100.000.</td>
+        <td class="rmetric">Depressão/ansiedade NÃO aumentam risco de incidência na maioria dos cânceres (exceto pulmão)</td>
+        <td class="ruse">Caveat científico importante: base de n2_depressao_cancer (prognóstico, não incidência).</td>
+      </tr>
+      <tr>
+        <td class="rcode">GEROSCI25</td>
+        <td class="rcite">GeroScience. "Depression increases cancer mortality by 23–83%: a meta-analysis of 65 studies." <em>GeroScience</em> 2025. Meta-análise 65 estudos, 5 tipos de câncer.</td>
+        <td class="rmetric">+23–83% mortalidade oncológica com depressão pós-diagnóstico</td>
+        <td class="ruse">Performance de n2_depressao_cancer e n3_risco_oncologico_integrado.</td>
+      </tr>
+      <tr>
+        <td class="rcode">IARC20</td>
+        <td class="rcite">International Agency for Research on Cancer. <em>World Cancer Report: Cancer Research for Cancer Prevention.</em> Lyon: IARC; 2020.</td>
+        <td class="rmetric">Evidência suficiente: obesidade → 13 tipos de câncer</td>
+        <td class="ruse">Fundamentação para n1_hiperinsulinemia_cancer, n2_obesidade_cancer, n3_risco_oncologico_integrado.</td>
+      </tr>
+      <tr>
+        <td class="rcode">NCI24</td>
+        <td class="rcite">National Cancer Institute. <em>Obesity and Cancer Fact Sheet.</em> NCI, 2024. cancer.gov</td>
+        <td class="rmetric">GLP-1RAs: redução de risco em 10/13 cânceres relacionados à obesidade (T2DM, n=1,6 mi)</td>
+        <td class="ruse">Sugestões clínicas de n2_obesidade_cancer. Mecanismo insulina/IGF-1/inflamação → câncer.</td>
+      </tr>
+
+      <tr><td colspan="4" class="cat-group-label">Farmacologia / GLP-1</td></tr>
+      <tr>
+        <td class="rcode">DAVIES21</td>
+        <td class="rcite">Davies M et al. "Semaglutide 2·4 mg once a week in adults with overweight or obesity." <em>NEJM</em> 2021;384(11):989–1002. STEP 1, n=1.961, 68 semanas.</td>
+        <td class="rmetric">−14,9% peso (semaglutida 2,4mg) vs. −2,4% placebo</td>
+        <td class="ruse">Performance de n1_elegib_glp1 e n2_elegib_completa.</td>
+      </tr>
+      <tr>
+        <td class="rcode">JASTREBOFF22</td>
+        <td class="rcite">Jastreboff AM et al. "Tirzepatide once weekly for the treatment of obesity." <em>NEJM</em> 2022;387(3):205–216. SURMOUNT-1, n=2.539, 72 semanas.</td>
+        <td class="rmetric">−20,9% peso (tirzepatida 15mg) vs. −3,1% placebo</td>
+        <td class="ruse">Performance de n2_elegib_completa. Referência para tirzepatida.</td>
+      </tr>
+
+      <tr><td colspan="4" class="cat-group-label">Frameworks Integrativos</td></tr>
+      <tr>
+        <td class="rcode">LOOKAHEAD12</td>
+        <td class="rcite">Look AHEAD Research Group. "Cardiovascular effects of intensive lifestyle intervention in type 2 diabetes." <em>NEJM</em> 2012;369(2):145–154. n=5.145, 8 anos de follow-up.</td>
+        <td class="rmetric">Melhora simultânea HbA1c, PA, lipídios, QV e depressão (intervenção intensiva)</td>
+        <td class="ruse">Base de n3_saude_masc_360 e n3_viabilidade_terapeutica_global. Evidência de tratamento integrado.</td>
+      </tr>
+      <tr>
+        <td class="rcode">GBD19</td>
+        <td class="rcite">GBD 2019 Mental Disorders Collaborators. "Global, regional, and national burden of 12 mental disorders, 1990–2019." <em>Lancet Psychiatry</em> 2022;9(2):137–150.</td>
+        <td class="rmetric">Depressão + DM2 = 8,5% dos DALYs globais combinados</td>
+        <td class="ruse">Performance de n3_carga_doenca_mental_metabolica. Métrica de carga global de doença.</td>
+      </tr>
+      <tr>
+        <td class="rcode">HOTAMISLIGIL17</td>
+        <td class="rcite">Hotamisligil GS. "Inflammation, metaflammation and immunometabolic disorders." <em>Cell</em> 2017;171(1):34–48.</td>
+        <td class="rmetric">Meta-inflamação: elo mecanístico obesidade → 13 tipos de câncer</td>
+        <td class="ruse">Fundamentação de n1_inflamacao_cronica. Mecanismo biológico IL-6/TNF-α/leptina.</td>
+      </tr>
+      <tr>
+        <td class="rcode">KOLOTKIN17</td>
+        <td class="rcite">Kolotkin RL & Andersen JR. "A systematic review of reviews: exploring the relationship between obesity, weight loss and health-related quality of life." <em>Obes Rev</em> 2017;18(7):773–792. k=89 estudos.</td>
+        <td class="rmetric">SF-36 físico: −8 a −15 pts em obesos; perda ≥5% peso: +4–7 pts</td>
+        <td class="ruse">Pesos e performance de n1_qualidade_vida. Referência para QVRS em obesidade.</td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="footer">
+  <div class="footer-in">
+    <div class="footer-note">Engine de Saúde Masculina v1 · Documentação de Referência · Abril 2026 · Sofia Marshallowitz</div>
+    <div class="footer-note">Os pesos refletem importância relativa reportada na literatura, não coeficientes de um modelo treinado em dados proprietários. Nunca usar para diagnóstico ou decisões clínicas individuais sem calibração e avaliação profissional.</div>
+  </div>
+</div>
+
+<script src="shared.js" defer></script>
+</body>
+</html>
