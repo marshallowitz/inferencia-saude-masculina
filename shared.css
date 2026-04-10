@@ -1,0 +1,224 @@
+/* ===== SHARED SITE STYLES ===== */
+
+/* NAV */
+#site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0f0e0c;
+  border-bottom: 1px solid #2a2a28;
+}
+.sn-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  height: 52px;
+}
+.sn-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: #f8f6f0;
+  letter-spacing: -0.01em;
+  margin-right: auto;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.sn-logo em {
+  color: #93c5fd;
+  font-style: normal;
+}
+.sn-links {
+  display: flex;
+  align-items: center;
+}
+.sn-links a {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+  text-decoration: none;
+  padding: 0 1rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid #2a2a28;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.sn-links a:hover {
+  color: #f8f6f0;
+}
+.sn-links a.sn-active {
+  color: #f8f6f0;
+}
+.sn-links a.sn-cta {
+  color: #93c5fd;
+}
+.sn-links a.sn-cta:hover {
+  color: #fff;
+}
+
+/* HAMBURGER */
+.sn-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.sn-burger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #f8f6f0;
+  border-radius: 2px;
+  transition: all 0.25s;
+  transform-origin: center;
+}
+.sn-burger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.sn-burger.open span:nth-child(2) {
+  opacity: 0;
+}
+.sn-burger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* MOBILE MENU DRAWER */
+.sn-drawer {
+  display: none;
+  position: fixed;
+  inset: 52px 0 0 0;
+  background: #0f0e0c;
+  z-index: 199;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #2a2a28;
+  overflow-y: auto;
+}
+.sn-drawer.open {
+  display: flex;
+}
+.sn-drawer a {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+  text-decoration: none;
+  padding: 1rem 0;
+  border-bottom: 1px solid #1a1a18;
+  transition: color 0.15s;
+}
+.sn-drawer a:hover {
+  color: #f8f6f0;
+}
+.sn-drawer a.sn-active {
+  color: #f8f6f0;
+}
+.sn-drawer a.sn-cta {
+  color: #93c5fd;
+}
+
+@media (max-width: 700px) {
+  .sn-links {
+    display: none;
+  }
+  .sn-burger {
+    display: flex;
+  }
+}
+
+/* ===== SCROLL ANIMATIONS ===== */
+.fade-up {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-up.delay-1 { transition-delay: 0.1s; }
+.fade-up.delay-2 { transition-delay: 0.2s; }
+.fade-up.delay-3 { transition-delay: 0.3s; }
+.fade-up.delay-4 { transition-delay: 0.4s; }
+
+/* ===== SHARED FOOTER ===== */
+.site-footer {
+  background: #0a0908;
+  padding: 2.5rem 2rem;
+  border-top: 1px solid #1a1a18;
+}
+.sf-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.sf-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #f8f6f0;
+  text-decoration: none;
+}
+.sf-logo em {
+  color: #93c5fd;
+  font-style: normal;
+}
+.sf-links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.sf-links a {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #444;
+  text-decoration: none;
+  transition: color 0.12s;
+}
+.sf-links a:hover {
+  color: #888;
+}
+.sf-copy {
+  font-size: 11px;
+  color: #333;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: 0.03em;
+  width: 100%;
+  margin-top: 0.5rem;
+  line-height: 1.6;
+}
+
+/* ===== PROGRESS BAR ===== */
+#read-progress {
+  position: fixed;
+  top: 52px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: #93c5fd;
+  z-index: 201;
+  transition: width 0.1s linear;
+}
