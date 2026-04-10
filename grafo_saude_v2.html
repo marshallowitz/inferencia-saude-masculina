@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafo — Engine de Saúde Masculina v1</title>
+<meta name="description" content="Grafo interativo de inferência em saúde masculina. 29 nós, 80+ conexões, filtros por domínio clínico.">
+<meta property="og:title" content="Grafo de Inferência — Saúde Masculina">
+<meta property="og:description" content="Visualização interativa da rede de inferência clínica. 29 nós, 80+ conexões.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+:root{--ink:#0f0e0c;--paper:#f8f6f0;--rule:#d8d4c8;--accent:#1a5fc8;--muted:#8a8680}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Syne',sans-serif;background:var(--paper);color:var(--ink);font-size:14px}
+.hdr{background:var(--ink);padding:0 2rem;border-bottom:3px solid #1a5fc8}
+.hdr-in{max-width:100%;display:flex;align-items:center;height:56px;gap:1rem}
+.hdr-logo{font-weight:800;font-size:14px;color:#f8f6f0;letter-spacing:-.01em;text-decoration:none;margin-right:auto}
+.hdr-logo em{color:#93c5fd;font-style:normal}
+.hdr-badge{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:#1a5fc8;color:#93c5fd;padding:2px 8px;border-radius:2px}
+
+.page-head{padding:2rem 2rem 1rem;max-width:1600px;margin:0 auto}
+.page-head h1{font-family:'DM Serif Display',serif;font-size:clamp(20px,2.5vw,34px);margin-bottom:.3rem}
+.page-head h1 em{font-style:italic;color:var(--accent)}
+.page-head p{font-size:13px;color:var(--muted);max-width:700px;line-height:1.7}
+
+.controls{padding:.8rem 2rem;max-width:1600px;margin:0 auto;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.ctrl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 11px;border:1.5px solid var(--rule);border-radius:4px;background:#fff;color:var(--muted);cursor:pointer;transition:all .12s}
+.ctrl:hover{border-color:#aaa;color:var(--ink)}
+.ctrl.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin-left:auto}
+.leg{display:flex;align-items:center;gap:.35rem;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.ld{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.hint{font-size:11px;color:var(--muted);font-style:italic;font-weight:400;letter-spacing:0;text-transform:none}
+
+.graph-outer{padding:0 2rem 3rem;max-width:1600px;margin:0 auto}
+#gwrap{border:1px solid var(--rule);border-radius:8px;background:#fff;overflow:auto;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+
+#tip{position:fixed;z-index:9999;background:var(--ink);color:#f0ede6;font-size:11px;line-height:1.6;padding:10px 14px;border-radius:5px;pointer-events:none;max-width:280px;display:none;border-top:3px solid var(--accent)}
+#tip b{font-size:13px;font-family:'DM Serif Display',serif;display:block;margin-bottom:3px;color:#fff}
+#tip .tdom{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.6;margin-bottom:4px}
+#tip .tref{opacity:.6;font-size:10px;margin-top:3px}
+#tip .tperf{color:#7adfc0;font-size:10px;margin-top:2px}
+#tip .tcav{color:#fbbf24;font-size:10px;margin-top:3px;font-style:italic}
+.gnode{cursor:pointer}
+</style>
+</head>
+<body>
+<div id="read-progress"></div>
+
+<div class="hdr">
+  <div class="hdr-in">
+    <a class="hdr-logo" href="index.html">Engine de <em>Saúde Masculina</em></a>
+    <span class="hdr-badge">v1 — 16 N1 · 9 N2 · 4 N3</span>
+  </div>
+</div>
+
+<div class="page-head">
+  <h1>Grafo de <em>inferência</em> — saúde masculina</h1>
+  <p>Mapa completo de como dados brutos se propagam para inferências primárias (N1), compostas (N2) e meta-inferências (N3). Clique em qualquer nó para destacar toda a cadeia. Hover para detalhes com fonte.</p>
+</div>
+
+<div class="controls">
+  <button class="ctrl on"  onclick="setF('all',this)">Todos</button>
+  <button class="ctrl" onclick="setF('metabolismo',this)">Metabolismo</button>
+  <button class="ctrl" onclick="setF('cardiovascular',this)">Cardiovascular</button>
+  <button class="ctrl" onclick="setF('mental',this)">Saúde mental</button>
+  <button class="ctrl" onclick="setF('oncologia',this)">Oncologia</button>
+  <button class="ctrl" onclick="setF('farmaco',this)">Farmacologia</button>
+  <button class="ctrl" onclick="setF('sono',this)">Sono</button>
+  <div class="legend">
+    <div class="leg"><div class="ld" style="background:#e8f0fe;border:1.5px solid #1a5fc8"></div>Dado</div>
+    <div class="leg"><div class="ld" style="background:#ddeaff;border:1.5px solid #1a5fc8"></div>N1</div>
+    <div class="leg"><div class="ld" style="background:#ede0ff;border:1.5px solid #6b3fb5"></div>N2</div>
+    <div class="leg"><div class="ld" style="background:#ffe8d8;border:1.5px solid #b54000"></div>N3</div>
+    <div class="leg"><div class="ld" style="background:#e1f5ee;border:1.5px solid #0f6e56"></div>Saúde mental</div>
+    <div class="leg"><div class="ld" style="background:#fff1f2;border:1.5px solid #be123c"></div>Oncologia</div>
+    <span class="hint">· Clique para destacar cadeia</span>
+  </div>
+</div>
+
+<div class="graph-outer">
+  <div id="gwrap"></div>
+</div>
+
+<div id="tip">
+  <div class="tdom" id="tdom"></div>
+  <b id="tn"></b>
+  <div class="tref" id="tr"></div>
+  <div class="tperf" id="tp"></div>
+  <div class="tcav" id="tc"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// NODOS — c=coluna (0=dado,1=N1,2=N2,3=N3), r=linha
+// domínios: metabolismo, cardiovascular, mental, oncologia, farmaco, sono, prostata
+// ══════════════════════════════════════════════════════════════════
+const N = [
+  // ── DADOS BRUTOS (coluna 0) ──────────────────────────────────
+  // Antropometria / Metabólico
+  {id:'imc',         c:0,r:0, t:'data',d:'metabolismo', l:'IMC'},
+  {id:'cintura',     c:0,r:1, t:'data',d:'metabolismo', l:'Circ. abdominal'},
+  {id:'glicemia',    c:0,r:2, t:'data',d:'metabolismo', l:'Glicemia jejum'},
+  {id:'hba1c',       c:0,r:3, t:'data',d:'metabolismo', l:'HbA1c (%)'},
+  {id:'insulina',    c:0,r:4, t:'data',d:'metabolismo', l:'Insulina jejum'},
+  {id:'triglicerides',c:0,r:5,t:'data',d:'metabolismo', l:'Triglicerídeos'},
+  {id:'hdl',         c:0,r:6, t:'data',d:'metabolismo', l:'HDL'},
+  {id:'pcr_alta',    c:0,r:7, t:'data',d:'metabolismo', l:'PCR-us >3 mg/L'},
+  {id:'adiponectina',c:0,r:8, t:'data',d:'metabolismo', l:'Adiponectina'},
+  {id:'igf1',        c:0,r:9, t:'data',d:'metabolismo', l:'IGF-1'},
+  {id:'leucocitos',  c:0,r:10,t:'data',d:'metabolismo', l:'Leucócitos'},
+  {id:'testosterona',c:0,r:11,t:'data',d:'metabolismo', l:'Testosterona'},
+  // Cardiovascular
+  {id:'pressao',     c:0,r:13,t:'data',d:'cardiovascular',l:'Pressão arterial'},
+  {id:'colesterol',  c:0,r:14,t:'data',d:'cardiovascular',l:'Colesterol'},
+  {id:'tabagismo',   c:0,r:15,t:'data',d:'cardiovascular',l:'Tabagismo'},
+  {id:'medic_antihiper',c:0,r:16,t:'data',d:'cardiovascular',l:'Anti-hipertensivo'},
+  {id:'diabetes',    c:0,r:17,t:'data',d:'cardiovascular',l:'Diabetes'},
+  {id:'fc_repouso',  c:0,r:18,t:'data',d:'cardiovascular',l:'FC repouso'},
+  // Histórico
+  {id:'idade',       c:0,r:20,t:'data',d:'metabolismo', l:'Idade'},
+  {id:'hist_glicemia',c:0,r:21,t:'data',d:'metabolismo',l:'Hist. glicemia alta'},
+  {id:'hist_familiar_dm',c:0,r:22,t:'data',d:'metabolismo',l:'Hist. fam. DM2'},
+  {id:'atv_fisica',  c:0,r:23,t:'data',d:'metabolismo', l:'Atividade física'},
+  {id:'alcool',      c:0,r:24,t:'data',d:'oncologia',   l:'Álcool'},
+  {id:'dieta_vermelha',c:0,r:25,t:'data',d:'oncologia', l:'Carne vermelha'},
+  {id:'hist_familiar_crc',c:0,r:26,t:'data',d:'oncologia',l:'Hist. fam. CRC'},
+  {id:'sangue_fezes',c:0,r:27,t:'data',d:'oncologia',   l:'FIT / sangue fezes'},
+  // Saúde mental
+  {id:'phq9',        c:0,r:29,t:'data',d:'mental',      l:'PHQ-9'},
+  {id:'phq2',        c:0,r:30,t:'data',d:'mental',      l:'PHQ-2'},
+  {id:'gad7',        c:0,r:31,t:'data',d:'mental',      l:'GAD-7'},
+  {id:'diag_mental', c:0,r:32,t:'data',d:'mental',      l:'Diagnóstico SM'},
+  {id:'medic_psiq',  c:0,r:33,t:'data',d:'mental',      l:'Medicação psiq.'},
+  {id:'estresse_percebido',c:0,r:34,t:'data',d:'mental', l:'PSS-10 estresse'},
+  {id:'qualidade_vida',c:0,r:35,t:'data',d:'mental',    l:'SF-12/36 (QV)'},
+  {id:'distress_onco',c:0,r:36,t:'data',d:'mental',     l:'DT distress onco'},
+  {id:'medo_recorrencia',c:0,r:37,t:'data',d:'mental',  l:'FCR recorrência'},
+  {id:'suporte_social',c:0,r:38,t:'data',d:'mental',    l:'Suporte social'},
+  // Sono / Fenotipagem
+  {id:'apneia',      c:0,r:40,t:'data',d:'sono',        l:'Apneia (SAOS)'},
+  {id:'sono_qualidade',c:0,r:41,t:'data',d:'sono',      l:'ISI sono'},
+  {id:'sono_horas',  c:0,r:42,t:'data',d:'sono',        l:'Horas/noite'},
+  {id:'sonolencia',  c:0,r:43,t:'data',d:'sono',        l:'Epworth sonolência'},
+  {id:'hrv',         c:0,r:44,t:'data',d:'sono',        l:'HRV (wearable)'},
+  {id:'sono_wearable',c:0,r:45,t:'data',d:'sono',       l:'Sono wearable'},
+  {id:'passos_dia',  c:0,r:46,t:'data',d:'sono',        l:'Passos/dia'},
+  {id:'ritmo_circadiano',c:0,r:47,t:'data',d:'sono',    l:'Ritmo circadiano'},
+  {id:'uso_noturno', c:0,r:48,t:'data',d:'mental',      l:'Uso noturno'},
+  {id:'vel_digitacao',c:0,r:49,t:'data',d:'mental',     l:'Vel. digitação'},
+  // Próstata / Oncológico
+  {id:'psa',         c:0,r:51,t:'data',d:'oncologia',   l:'PSA total'},
+  {id:'psa_livre',   c:0,r:52,t:'data',d:'oncologia',   l:'%PSA livre'},
+  {id:'dre',         c:0,r:53,t:'data',d:'oncologia',   l:'Toque retal (DRE)'},
+  {id:'sint_urinarios',c:0,r:54,t:'data',d:'oncologia', l:'IPSS sintomas'},
+  {id:'hist_familiar_prostata',c:0,r:55,t:'data',d:'oncologia',l:'Hist. fam. próstata'},
+  // Farmacológico
+  {id:'gi_gastroparesia',c:0,r:57,t:'data',d:'farmaco', l:'Gastroparesia'},
+  {id:'glp1_historico',c:0,r:58,t:'data',d:'farmaco',  l:'Hist. uso GLP-1'},
+  {id:'funcao_sexual',c:0,r:59,t:'data',d:'mental',     l:'IIEF função sexual'},
+  {id:'peso_desejado',c:0,r:60,t:'data',d:'metabolismo',l:'Peso desejado'},
+  {id:'variacao_peso',c:0,r:61,t:'data',d:'metabolismo',l:'Variação de peso'},
+
+  // ── N1 — coluna 1 ────────────────────────────────────────────
+  {id:'n1_obesidade',c:1,r:3, t:'n1',d:'metabolismo',
+   l:'Obesidade e\nperfil adiposo',
+   ref:'ABESO 2022; IDF 2006',perf:'Classif. direta; Sens 82% circ. abd.'},
+  {id:'n1_dm2',c:1,r:9, t:'n1',d:'metabolismo',
+   l:'Risco DM2\n(FINDRISC)',
+   ref:'Lindström & Tuomilehto 2003; Aschner 2023 n=47.267',perf:'AUC=0,76; Sens 78-81%, Spec 76-77%'},
+  {id:'n1_cardio',c:1,r:16,t:'n1',d:'cardiovascular',
+   l:'Risco cardiovascular\n(Framingham)',
+   ref:"D'Agostino et al. 2008, Circulation 118(24)",perf:'AUC=0,794 (IC95% 0,743-0,844)'},
+  {id:'n1_sindrome_met_vars',c:1,r:23,t:'n1',d:'metabolismo',
+   l:'Componentes\nSíndrome Metabólica',
+   ref:'Alberti et al. 2009, IDF/AHA/NHLBI Joint Statement',perf:'Sens 84%, Spec 78% para DCV 10 anos'},
+  {id:'n1_resistencia_insulinica',c:1,r:30,t:'n1',d:'metabolismo',
+   l:'Resistência insulínica\nHOMA-IR',
+   ref:'Matthews et al. 1985 (HOMA-IR); NCI 2024; Pollak 2012',perf:'HOMA-IR >2,5: Sens 77%, Spec 67%'},
+  {id:'n1_inflamacao_cronica',c:1,r:37,t:'n1',d:'metabolismo',
+   l:'Inflamação crônica\nde baixo grau',
+   ref:'ERFC 2010, JAMA (n=160.309); Hotamisligil 2017, Cell',perf:'PCR-us >3: HR=1,78 eventos CV'},
+  {id:'n1_depressao',c:1,r:43,t:'n1',d:'mental',
+   l:'Triagem depressão\nPHQ-2/9',
+   ref:'Kroenke 2003 (PHQ-2); Moreno 2016 (BR PHQ-9)',perf:'PHQ-2≥3: Sens 83%, Spec 92%'},
+  {id:'n1_ansiedade',c:1,r:49,t:'n1',d:'mental',
+   l:'Triagem ansiedade\nGAD-7',
+   ref:'Spitzer 2006; García-Batista 2018 (latinos)',perf:'GAD-7≥10: Sens 89%, Spec 82%; AUC=0,91'},
+  {id:'n1_sono',c:1,r:55,t:'n1',d:'sono',
+   l:'Qualidade do sono\ne apneia',
+   ref:'AASM 2015; ISI — Morin 2011; Cappuccio 2008',perf:'ISI: AUC=0,87; SAOS+obs: OR=3,5 para DM2'},
+  {id:'n1_burnout',c:1,r:62,t:'n1',d:'mental',
+   l:'Burnout ocupacional\n(fenotipagem)',
+   ref:'Barac et al. JMIR 2024; PMC12655262 2025',perf:'Sens 71-83% em prof. saúde (wearables)'},
+  {id:'n1_elegib_glp1',c:1,r:68,t:'n1',d:'farmaco',
+   l:'Elegibilidade GLP-1\nfarmacológica',
+   ref:'FDA Ozempic 2021; FDA Mounjaro 2022; SBD 2024; ABESO 2022',perf:'STEP 1: -14,9% peso; SURMOUNT-1: -20,9%'},
+  {id:'n1_prostata',c:1,r:75,t:'n1',d:'oncologia',
+   l:'Risco câncer\nde próstata',
+   ref:'Ross et al. 2007 J Clin Oncol; Barros 2015 Barretos (n=1313)',perf:'AUC=0,766 (Barretos); PSA isolado: AUC=0,72'},
+  {id:'n1_cancer_crc',c:1,r:82,t:'n1',d:'oncologia',
+   l:'Risco câncer\ncolorretal (LiFeCRC)',
+   ref:'LiFeCRC — EPIC n=138k; Kurth 2007 PHS n=21.581; BMC Cancer 2025 n=394k',perf:'LiFeCRC homens: AUC=0,76-0,77; Kurth: OR=15,29'},
+  {id:'n1_distress_onco',c:1,r:89,t:'n1',d:'mental',
+   l:'Distress oncológico\n(NCCN DT)',
+   ref:'Mitchell 2007 J Clin Oncol (meta-análise k=38); NCCN Guidelines',perf:'DT≥4: Sens 77-82%, Spec 72-78%'},
+  {id:'n1_qualidade_vida',c:1,r:95,t:'n1',d:'mental',
+   l:'Qualidade de vida\n(SF-12/36)',
+   ref:'Kolotkin & Andersen 2017 Obes Rev (k=89); Ware 1992 SF-36',perf:'SF-36: -8 a -15 pts em obesos vs. normopeso'},
+  {id:'n1_hiperinsulinemia_cancer',c:1,r:101,t:'n1',d:'oncologia',
+   l:'Hiperinsulinemia e\nrisco oncológico',
+   ref:'Mahamat-Saleh 2024 British J Cancer (IARC n=797.193); NCI 2024',perf:'MUOW/OB: SRR=1,24 CRC; 1,71 rim; 1,81 fígado'},
+
+  // ── N2 — coluna 2 ────────────────────────────────────────────
+  {id:'n2_sindrome_met',c:2,r:9, t:'n2',d:'metabolismo',
+   l:'Síndrome metabólica\nintegrada',
+   ref:'Alberti 2009; GBD 2019 Lancet',perf:'AUC=0,82 para DCV 10 anos; SM: RR=2,35 DCV'},
+  {id:'n2_saude_mental_peso',c:2,r:21,t:'n2',d:'mental',
+   l:'Saúde mental e\nemagrecimento',
+   ref:'Luppino 2010 Arch Gen Psychiatry (n=55.387); Lancet Psychiatry 2025',perf:'OR=1,55 bidirecional; AUC multimodal 0,78-0,85'},
+  {id:'n2_risco_cardiomet',c:2,r:33,t:'n2',d:'cardiovascular',
+   l:'Risco cardiometabólico\nintegrado',
+   ref:'GBD 2019 Lancet 396:1204; ESC Guidelines 2021; SBC/SBD 2022',perf:'AUC=0,78-0,84 para eventos CV 10 anos'},
+  {id:'n2_elegib_completa',c:2,r:44,t:'n2',d:'farmaco',
+   l:'Elegibilidade integrada\npara GLP-1',
+   ref:'Davies 2021 NEJM (STEP 1); Jastreboff 2022 NEJM (SURMOUNT-1)',perf:'STEP 1: -14,9%; SURMOUNT-1: -20,9%'},
+  {id:'n2_sono_mental',c:2,r:55,t:'n2',d:'mental',
+   l:'Sono e saúde\nmental integrados',
+   ref:'Baglioni 2016 Sleep Med Rev (k=21, n=172.077); AASM 2021',perf:'Insônia → depressão: OR=2,10 (IC95% 1,86-2,38)'},
+  {id:'n2_obesidade_cancer',c:2,r:67,t:'n2',d:'oncologia',
+   l:'Obesidade metabólica\ne risco oncológico',
+   ref:'Mahamat-Saleh 2024 British J Cancer IARC (n=797.193); NCI 2024',perf:'MUOW/OB: SRR=1,42 cânceres relacionados à obesidade'},
+  {id:'n2_depressao_cancer',c:2,r:79,t:'n2',d:'mental',
+   l:'Depressão, ansiedade\ne prognóstico oncológico',
+   ref:'van Tuijl 2023 Cancer (PSY-CA IPD); GeroScience 2025',perf:'Depressão pós-diagnóstico: +23-83% mortalidade oncológica'},
+  {id:'n2_psicossomatico_integrado',c:2,r:91,t:'n2',d:'mental',
+   l:'Saúde psicossomática\nintegrada',
+   ref:'Lancet Psychiatry 2025; Luppino 2010 (n=55.387); BMC Public Health 2024',perf:'Obesidade+depressão: AOR=3,77 para multimorbidade'},
+  {id:'n2_cancer_crc_integrado',c:2,r:103,t:'n2',d:'oncologia',
+   l:'Risco integrado\ncâncer colorretal',
+   ref:'LiFeCRC AUC=0,77; Kurth 2007 OR=15,29; BMC Cancer 2025 C-index=0,718',perf:'Lifestyle score: OR=5,82 (IC95% 4,02-8,44)'},
+
+  // ── N3 — coluna 3 ────────────────────────────────────────────
+  {id:'n3_saude_masc_360',c:3,r:22,t:'n3',d:'metabolismo',
+   l:'Perfil de saúde\nmasculina 360°',
+   ref:'WHO NCD Action Plan 2030; Look AHEAD NEJM 2012 (n=5.145)',perf:'Redução de 34-38% no erro de estratificação vs. modelos unidimensionais'},
+  {id:'n3_risco_oncologico_integrado',c:3,r:50,t:'n3',d:'oncologia',
+   l:'Risco oncológico\nintegrado',
+   ref:'IARC World Cancer Report 2020; NCI 2024; GeoScience 2025',perf:'C-index multimodal=0,718; depressão +23-83% mortalidade oncológica'},
+  {id:'n3_carga_doenca_mental_metabolica',c:3,r:77,t:'n3',d:'mental',
+   l:'Carga de doença\nmental-metabólica',
+   ref:'GBD 2019; Lancet Psychiatry 2025; BMC Public Health 2024 (n=16.366)',perf:'AOR=3,77 para multimorbidade; GBD: depressão+DM2=8,5% dos DALYs'},
+  {id:'n3_viabilidade_terapeutica_global',c:3,r:100,t:'n3',d:'farmaco',
+   l:'Viabilidade terapêutica\ne plano de cuidado',
+   ref:'Look AHEAD NEJM 2012 (n=5.145); STEP 1 2021; NCCN 2024',perf:'Look AHEAD: melhora simultânea HbA1c, PA, QV, depressão'},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// ARESTAS
+// ══════════════════════════════════════════════════════════════════
+const E = [
+  // dados → n1_obesidade
+  {f:'imc',t:'n1_obesidade'},{f:'cintura',t:'n1_obesidade'},
+  {f:'peso_desejado',t:'n1_obesidade'},{f:'atv_fisica',t:'n1_obesidade'},{f:'variacao_peso',t:'n1_obesidade'},
+  // dados → n1_dm2
+  {f:'hist_glicemia',t:'n1_dm2'},{f:'hist_familiar_dm',t:'n1_dm2'},
+  {f:'imc',t:'n1_dm2'},{f:'atv_fisica',t:'n1_dm2'},{f:'medic_antihiper',t:'n1_dm2'},{f:'idade',t:'n1_dm2'},
+  // dados → n1_cardio
+  {f:'pressao',t:'n1_cardio'},{f:'colesterol',t:'n1_cardio'},{f:'tabagismo',t:'n1_cardio'},
+  {f:'diabetes',t:'n1_cardio'},{f:'idade',t:'n1_cardio'},{f:'medic_antihiper',t:'n1_cardio'},
+  // dados → n1_sindrome_met_vars
+  {f:'cintura',t:'n1_sindrome_met_vars'},{f:'triglicerides',t:'n1_sindrome_met_vars'},
+  {f:'hdl',t:'n1_sindrome_met_vars'},{f:'pressao',t:'n1_sindrome_met_vars'},{f:'glicemia',t:'n1_sindrome_met_vars'},
+  // dados → n1_resistencia_insulinica
+  {f:'insulina',t:'n1_resistencia_insulinica'},{f:'hba1c',t:'n1_resistencia_insulinica'},
+  {f:'glicemia',t:'n1_resistencia_insulinica'},{f:'imc',t:'n1_resistencia_insulinica'},{f:'igf1',t:'n1_resistencia_insulinica'},
+  // dados → n1_inflamacao_cronica
+  {f:'pcr_alta',t:'n1_inflamacao_cronica'},{f:'imc',t:'n1_inflamacao_cronica'},
+  {f:'cintura',t:'n1_inflamacao_cronica'},{f:'adiponectina',t:'n1_inflamacao_cronica'},{f:'leucocitos',t:'n1_inflamacao_cronica'},
+  // dados → n1_depressao
+  {f:'phq9',t:'n1_depressao'},{f:'phq2',t:'n1_depressao'},
+  {f:'diag_mental',t:'n1_depressao'},{f:'medic_psiq',t:'n1_depressao'},
+  // dados → n1_ansiedade
+  {f:'gad7',t:'n1_ansiedade'},{f:'estresse_percebido',t:'n1_ansiedade'},{f:'diag_mental',t:'n1_ansiedade'},
+  // dados → n1_sono
+  {f:'apneia',t:'n1_sono'},{f:'sono_qualidade',t:'n1_sono'},{f:'sono_horas',t:'n1_sono'},
+  {f:'sonolencia',t:'n1_sono'},{f:'ritmo_circadiano',t:'n1_sono'},
+  // dados → n1_burnout
+  {f:'hrv',t:'n1_burnout'},{f:'sono_wearable',t:'n1_burnout'},{f:'passos_dia',t:'n1_burnout'},
+  {f:'uso_noturno',t:'n1_burnout'},{f:'vel_digitacao',t:'n1_burnout'},{f:'ritmo_circadiano',t:'n1_burnout'},
+  // dados → n1_elegib_glp1
+  {f:'imc',t:'n1_elegib_glp1'},{f:'gi_gastroparesia',t:'n1_elegib_glp1'},
+  {f:'hist_familiar_prostata',t:'n1_elegib_glp1'},{f:'diag_mental',t:'n1_elegib_glp1'},{f:'glp1_historico',t:'n1_elegib_glp1'},
+  // dados → n1_prostata
+  {f:'psa',t:'n1_prostata'},{f:'psa_livre',t:'n1_prostata'},{f:'idade',t:'n1_prostata'},
+  {f:'hist_familiar_prostata',t:'n1_prostata'},{f:'dre',t:'n1_prostata'},{f:'sint_urinarios',t:'n1_prostata'},
+  // dados → n1_cancer_crc
+  {f:'idade',t:'n1_cancer_crc'},{f:'hist_familiar_crc',t:'n1_cancer_crc'},{f:'imc',t:'n1_cancer_crc'},
+  {f:'alcool',t:'n1_cancer_crc'},{f:'tabagismo',t:'n1_cancer_crc'},{f:'dieta_vermelha',t:'n1_cancer_crc'},
+  {f:'atv_fisica',t:'n1_cancer_crc'},{f:'sangue_fezes',t:'n1_cancer_crc'},
+  // dados → n1_distress_onco
+  {f:'distress_onco',t:'n1_distress_onco'},{f:'phq9',t:'n1_distress_onco'},
+  {f:'medo_recorrencia',t:'n1_distress_onco'},{f:'suporte_social',t:'n1_distress_onco'},
+  // dados → n1_qualidade_vida
+  {f:'qualidade_vida',t:'n1_qualidade_vida'},{f:'funcao_sexual',t:'n1_qualidade_vida'},
+  {f:'sono_qualidade',t:'n1_qualidade_vida'},{f:'atv_fisica',t:'n1_qualidade_vida'},{f:'estresse_percebido',t:'n1_qualidade_vida'},
+  // dados → n1_hiperinsulinemia_cancer
+  {f:'imc',t:'n1_hiperinsulinemia_cancer'},{f:'insulina',t:'n1_hiperinsulinemia_cancer'},
+  {f:'glicemia',t:'n1_hiperinsulinemia_cancer'},{f:'pcr_alta',t:'n1_hiperinsulinemia_cancer'},
+  {f:'triglicerides',t:'n1_hiperinsulinemia_cancer'},{f:'igf1',t:'n1_hiperinsulinemia_cancer'},{f:'adiponectina',t:'n1_hiperinsulinemia_cancer'},
+
+  // ── N1 → N2 ──────────────────────────────────────────────────
+  // n2_sindrome_met
+  {f:'n1_cardio',t:'n2_sindrome_met'},{f:'n1_dm2',t:'n2_sindrome_met'},
+  {f:'n1_sindrome_met_vars',t:'n2_sindrome_met'},{f:'n1_obesidade',t:'n2_sindrome_met'},
+  // n2_saude_mental_peso
+  {f:'n1_depressao',t:'n2_saude_mental_peso'},{f:'n1_obesidade',t:'n2_saude_mental_peso'},
+  {f:'n1_sono',t:'n2_saude_mental_peso'},{f:'n1_ansiedade',t:'n2_saude_mental_peso'},
+  // n2_risco_cardiomet (também pega N2)
+  {f:'n1_cardio',t:'n2_risco_cardiomet'},{f:'n1_dm2',t:'n2_risco_cardiomet'},
+  {f:'n2_sindrome_met',t:'n2_risco_cardiomet'},
+  // n2_elegib_completa
+  {f:'n1_elegib_glp1',t:'n2_elegib_completa'},{f:'n1_obesidade',t:'n2_elegib_completa'},
+  {f:'n1_depressao',t:'n2_elegib_completa'},{f:'n1_sono',t:'n2_elegib_completa'},
+  // n2_sono_mental
+  {f:'n1_depressao',t:'n2_sono_mental'},{f:'n1_sono',t:'n2_sono_mental'},
+  {f:'n1_ansiedade',t:'n2_sono_mental'},{f:'n1_burnout',t:'n2_sono_mental'},
+  // n2_obesidade_cancer
+  {f:'n1_hiperinsulinemia_cancer',t:'n2_obesidade_cancer'},{f:'n1_inflamacao_cronica',t:'n2_obesidade_cancer'},
+  {f:'n1_sindrome_met_vars',t:'n2_obesidade_cancer'},{f:'n1_obesidade',t:'n2_obesidade_cancer'},
+  // n2_depressao_cancer
+  {f:'n1_distress_onco',t:'n2_depressao_cancer'},{f:'n1_depressao',t:'n2_depressao_cancer'},
+  {f:'n1_ansiedade',t:'n2_depressao_cancer'},{f:'n1_qualidade_vida',t:'n2_depressao_cancer'},
+  // n2_psicossomatico_integrado (pega N2)
+  {f:'n2_saude_mental_peso',t:'n2_psicossomatico_integrado'},{f:'n2_sono_mental',t:'n2_psicossomatico_integrado'},
+  {f:'n1_qualidade_vida',t:'n2_psicossomatico_integrado'},{f:'n1_inflamacao_cronica',t:'n2_psicossomatico_integrado'},
+  // n2_cancer_crc_integrado (pega N2)
+  {f:'n1_cancer_crc',t:'n2_cancer_crc_integrado'},{f:'n1_hiperinsulinemia_cancer',t:'n2_cancer_crc_integrado'},
+  {f:'n1_inflamacao_cronica',t:'n2_cancer_crc_integrado'},{f:'n2_sindrome_met',t:'n2_cancer_crc_integrado'},
+
+  // ── N2 → N3 ──────────────────────────────────────────────────
+  // n3_saude_masc_360
+  {f:'n2_sindrome_met',t:'n3_saude_masc_360'},{f:'n2_saude_mental_peso',t:'n3_saude_masc_360'},
+  {f:'n2_risco_cardiomet',t:'n3_saude_masc_360'},{f:'n2_elegib_completa',t:'n3_saude_masc_360'},
+  {f:'n2_sono_mental',t:'n3_saude_masc_360'},
+  // n3_risco_oncologico_integrado
+  {f:'n2_obesidade_cancer',t:'n3_risco_oncologico_integrado'},{f:'n2_cancer_crc_integrado',t:'n3_risco_oncologico_integrado'},
+  {f:'n1_prostata',t:'n3_risco_oncologico_integrado'},{f:'n1_hiperinsulinemia_cancer',t:'n3_risco_oncologico_integrado'},
+  {f:'n2_depressao_cancer',t:'n3_risco_oncologico_integrado'},
+  // n3_carga_doenca_mental_metabolica
+  {f:'n2_psicossomatico_integrado',t:'n3_carga_doenca_mental_metabolica'},
+  {f:'n2_sindrome_met',t:'n3_carga_doenca_mental_metabolica'},
+  {f:'n2_sono_mental',t:'n3_carga_doenca_mental_metabolica'},
+  {f:'n1_qualidade_vida',t:'n3_carga_doenca_mental_metabolica'},
+  {f:'n2_elegib_completa',t:'n3_carga_doenca_mental_metabolica'},
+  // n3_viabilidade_terapeutica_global (pega N3!)
+  {f:'n3_saude_masc_360',t:'n3_viabilidade_terapeutica_global'},
+  {f:'n3_carga_doenca_mental_metabolica',t:'n3_viabilidade_terapeutica_global'},
+  {f:'n2_elegib_completa',t:'n3_viabilidade_terapeutica_global'},
+  {f:'n2_risco_cardiomet',t:'n3_viabilidade_terapeutica_global'},
+  {f:'n3_risco_oncologico_integrado',t:'n3_viabilidade_terapeutica_global'},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// LAYOUT
+// ══════════════════════════════════════════════════════════════════
+const CX  = [120, 330, 560, 790];
+const RH  = 34;
+const PAD = 44;
+
+const SZ = {
+  data:{w:148,h:24,r:3},
+  n1:  {w:162,h:42,r:6},
+  n2:  {w:175,h:46,r:8},
+  n3:  {w:168,h:56,r:10},
+};
+
+function sz(n){ return SZ[n.t]; }
+function py(n){ return {x:CX[n.c], y:PAD + n.r*RH}; }
+
+const MAXR = Math.max(...N.map(n=>n.r));
+const SVG_H = PAD + MAXR*RH + 70;
+const SVG_W = CX[3] + SZ.n3.w/2 + 40;
+
+// Colores por domínio
+const DCOL = {
+  metabolismo:    {f:'#dbeafe',s:'#1d4ed8',tx:'#1e3a8a'},
+  cardiovascular: {f:'#fee2e2',s:'#dc2626',tx:'#7f1d1d'},
+  mental:         {f:'#e1f5ee',s:'#0f766e',tx:'#064030'},
+  oncologia:      {f:'#fff1f2',s:'#be123c',tx:'#7f1d1d'},
+  farmaco:        {f:'#fef3c7',s:'#b45309',tx:'#78350f'},
+  sono:           {f:'#dbeafe',s:'#1d4ed8',tx:'#1e3a8a'},
+  prostata:       {f:'#fce7f3',s:'#be185d',tx:'#831843'},
+};
+const TCOL = {
+  data:{f:'#f0f4ff',s:'#6b7dd8',tx:'#1e3a8a'},
+  n2:  {f:'#ede0ff',s:'#6b3fb5',tx:'#3a1080'},
+  n3:  {f:'#ffe8d8',s:'#b54000',tx:'#5c2000'},
+};
+
+function col(n){
+  if(n.t==='n2') return TCOL.n2;
+  if(n.t==='n3') return TCOL.n3;
+  if(n.t==='data') return TCOL.data;
+  return DCOL[n.d] || DCOL.metabolismo;
+}
+
+// Índice
+const NI = Object.fromEntries(N.map(n=>[n.id,n]));
+
+// Propagação de cadeia (bidirecional)
+function getChain(id){
+  const v=new Set([id]);
+  let fr=[id];
+  while(fr.length){
+    const nx=[];
+    fr.forEach(x=>{ E.forEach(e=>{ if(e.t===x&&!v.has(e.f)){v.add(e.f);nx.push(e.f);} }); });
+    fr=nx;
+  }
+  fr=[id];
+  while(fr.length){
+    const nx=[];
+    fr.forEach(x=>{ E.forEach(e=>{ if(e.f===x&&!v.has(e.t)){v.add(e.t);nx.push(e.t);} }); });
+    fr=nx;
+  }
+  return v;
+}
+
+let sel=null, flt='all';
+
+// Visibilidade por filtro de domínio
+function vis(n){
+  if(flt==='all') return true;
+  if(n.t==='data'){
+    return E.some(e=>e.f===n.id && NI[e.t] && NI[e.t].d===flt && NI[e.t].t==='n1');
+  }
+  if(n.t==='n1') return n.d===flt;
+  if(n.t==='n2'){
+    return E.some(e=>e.t===n.id && NI[e.f] && NI[e.f].d===flt);
+  }
+  return true; // N3 sempre visível
+}
+
+function draw(){
+  const chain = sel ? getChain(sel) : null;
+  const visSet = new Set(N.filter(vis).map(n=>n.id));
+
+  let s = `<svg id="gs" viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg" style="width:${SVG_W}px;min-width:100%;display:block">`;
+
+  // Defs — marcadores de seta
+  s += `<defs>
+    <marker id="aact" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+    </marker>
+    <marker id="afaint" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round"/>
+    </marker>
+    <marker id="adim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#e0dbd2" stroke-width="1" stroke-linecap="round"/>
+    </marker>
+    <marker id="ament" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round"/>
+    </marker>
+    <marker id="aonco" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#be123c" stroke-width="1.8" stroke-linecap="round"/>
+    </marker>
+  </defs>`;
+
+  // Cabeçalhos de coluna
+  [['DADOS BRUTOS','#6b7dd8'],['N1 — INFERÊNCIAS PRIMÁRIAS','#1d4ed8'],['N2 — COMPOSTAS','#6b3fb5'],['N3 — META','#b54000']].forEach(([l,c],i)=>{
+    s+=`<text x="${CX[i]}" y="22" text-anchor="middle" font-family="'Syne',sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.2" fill="${c}" opacity="0.65">${l}</text>`;
+  });
+
+  // Separadores
+  [225,450,680].forEach(lx=>{
+    s+=`<line x1="${lx}" y1="32" x2="${lx}" y2="${SVG_H-20}" stroke="#d8d4c8" stroke-width="0.5" stroke-dasharray="3 8"/>`;
+  });
+
+  // Arestas
+  E.forEach(e=>{
+    const fn=NI[e.f], tn=NI[e.t];
+    if(!fn||!tn||!visSet.has(fn.id)||!visSet.has(tn.id)) return;
+    const fp=py(fn), tp=py(tn);
+    const sfn=sz(fn), stn=sz(tn);
+    const mx=(CX[fn.c]+CX[tn.c])/2;
+    const hi = chain&&chain.has(fn.id)&&chain.has(tn.id);
+    const dim = chain&&!hi;
+
+    let stroke, sw, op, mk;
+    if(dim){        stroke='#ddd';   sw=0.5; op=0.15; mk='adim'; }
+    else if(hi){
+      if(fn.d==='mental'||tn.d==='mental'){ stroke='#0f766e'; sw=2; op=0.85; mk='ament'; }
+      else if(fn.d==='oncologia'||tn.d==='oncologia'){ stroke='#be123c'; sw=2; op=0.85; mk='aonco'; }
+      else{ stroke='#1d4ed8'; sw=2; op=0.85; mk='aact'; }
+    } else {
+      if(fn.d==='mental'||tn.d==='mental'){ stroke='#5dcaa5'; sw=0.8; op=0.45; mk='ament'; }
+      else if(fn.d==='oncologia'||tn.d==='oncologia'){ stroke='#f87171'; sw=0.8; op=0.45; mk='aonco'; }
+      else{ stroke='#93b4f0'; sw=0.8; op=0.4; mk='afaint'; }
+    }
+    s+=`<path d="M${CX[fn.c]+sfn.w/2},${fp.y} C${mx},${fp.y} ${mx},${tp.y} ${CX[tn.c]-stn.w/2},${tp.y}" fill="none" stroke="${stroke}" stroke-width="${sw}" opacity="${op}" marker-end="url(#${mk})"/>`;
+  });
+
+  // Nós
+  N.forEach(n=>{
+    if(!visSet.has(n.id)) return;
+    const p=py(n), s2=sz(n), c=col(n);
+    const isSel=n.id===sel;
+    const dim=chain&&!chain.has(n.id);
+    const x=p.x-s2.w/2, y=p.y-s2.h/2;
+    const fill=isSel?c.s:c.f;
+    const tf=isSel?'#fff':(dim?'#ccc':c.tx);
+    const op=dim?0.18:1;
+    const bsw=isSel?2.5:1.2;
+
+    // Nó composto (N1/N2/N3) tem texto em 2 linhas e referência
+    const isComplex=n.t!=='data';
+    const lines=n.l.split('\n');
+
+    s+=`<g class="gnode" data-id="${n.id}" data-l="${lines[0]}" data-d="${n.d||''}" data-ref="${(n.ref||'').replace(/"/g,'&quot;')}" data-perf="${(n.perf||'').replace(/"/g,'&quot;')}" opacity="${op}">`;
+    s+=`<rect x="${x}" y="${y}" width="${s2.w}" height="${s2.h}" rx="${s2.r}" fill="${fill}" stroke="${c.s}" stroke-width="${bsw}"/>`;
+
+    if(isComplex && lines.length===2){
+      // 2 linhas de label
+      s+=`<text x="${p.x}" y="${p.y-8}" text-anchor="middle" dominant-baseline="central" font-family="'Syne',sans-serif" font-size="11.5" font-weight="700" fill="${tf}">${lines[0]}</text>`;
+      s+=`<text x="${p.x}" y="${p.y+6}" text-anchor="middle" dominant-baseline="central" font-family="'Syne',sans-serif" font-size="11.5" font-weight="700" fill="${tf}">${lines[1]}</text>`;
+      if(n.ref){
+        const rf=isSel?'rgba(255,255,255,0.55)':(c.s+'90');
+        const rt=n.ref.length>38?n.ref.slice(0,36)+'…':n.ref;
+        s+=`<text x="${p.x}" y="${p.y+19}" text-anchor="middle" dominant-baseline="central" font-family="'Syne',sans-serif" font-size="8.5" fill="${rf}">${rt}</text>`;
+      }
+    } else {
+      s+=`<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" font-family="'Syne',sans-serif" font-size="${n.t==='data'?10.5:12}" font-weight="${n.t==='data'?500:700}" fill="${tf}">${lines[0]}</text>`;
+    }
+    s+=`</g>`;
+  });
+
+  s+='</svg>';
+  const wrap=document.getElementById('gwrap');
+  wrap.innerHTML=s;
+
+  document.querySelectorAll('.gnode').forEach(el=>{
+    el.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const id=el.dataset.id;
+      sel=sel===id?null:id;
+      draw();
+    });
+    el.addEventListener('mouseenter',ev=>{
+      const tt=document.getElementById('tip');
+      document.getElementById('tdom').textContent=el.dataset.d.toUpperCase();
+      document.getElementById('tn').textContent=el.dataset.l;
+      document.getElementById('tr').textContent=el.dataset.ref||'';
+      document.getElementById('tp').textContent=el.dataset.perf?'⚡ '+el.dataset.perf:'';
+      tt.style.display='block';
+      mv(ev);
+    });
+    el.addEventListener('mousemove',mv);
+    el.addEventListener('mouseleave',()=>{ document.getElementById('tip').style.display='none'; });
+  });
+  wrap.onclick=()=>{ sel=null; draw(); };
+}
+
+function mv(e){
+  const tt=document.getElementById('tip');
+  const tx=e.clientX+16, ty=e.clientY-12;
+  tt.style.left=Math.min(tx, window.innerWidth-300)+'px';
+  tt.style.top=Math.max(8,ty)+'px';
+}
+
+function setF(d,btn){
+  flt=d; sel=null;
+  document.querySelectorAll('.ctrl').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  draw();
+}
+
+draw();
+window.addEventListener('resize',draw);
+</script>
+<script src="shared.js" defer></script>
+</body>
+</html>
