@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engine de Saúde Masculina v3</title>
+<meta name="description" content="Calculadora de inferência clínica em saúde masculina. Selecione estados clínicos e obtenha inferências epidemiológicas rastreáveis baseadas em estudos publicados.">
+<meta property="og:title" content="Engine de Saúde Masculina v3">
+<meta property="og:description" content="Engine de inferência clínica com 16 modelos N1, 9 N2 e 4 N3. Cada peso derivado da literatura.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+:root{--bg:#f4f1eb;--white:#fff;--ink:#1a1814;--muted:#6b6760;--rule:#e0dbd2;--rule2:#ccc8bf;
+  --blue:#1d4ed8;--blue-l:#dbeafe;--blue-d:#1e3a8a;--green:#15803d;--green-l:#dcfce7;
+  --amber:#92400e;--amber-l:#fef3c7;--red:#be123c;--red-l:#ffe4e6;
+  --purple:#6d28d9;--purple-l:#ede9fe;--teal:#0f766e;--teal-l:#ccfbf1;
+  --orange:#c2410c;--orange-l:#ffedd5;--slate:#334155;--slate-l:#f1f5f9}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
+
+/* HEADER */
+.hdr{background:var(--ink);padding:2.5rem 2rem 2rem;border-bottom:3px solid #2d4e8a}
+.hdr-in{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:end}
+@media(max-width:600px){.hdr-in{grid-template-columns:1fr}}
+.hdr-badge{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:#2d4e8a;color:#93c5fd;padding:3px 10px;border-radius:2px;display:inline-block;margin-bottom:.8rem}
+.hdr h1{font-family:'DM Serif Display',serif;font-size:clamp(20px,3vw,34px);color:#f4f1eb;line-height:1.1;margin-bottom:.4rem}
+.hdr h1 em{font-style:italic;color:#93c5fd}
+.hdr p{font-size:12px;color:#9ca3af;max-width:520px;line-height:1.7}
+.hdr-formula{background:#ffffff12;border:1px solid #ffffff22;border-radius:6px;padding:1rem 1.2rem;font-size:12px;color:#cbd5e1;min-width:220px}
+.hdr-formula .eq{font-family:'DM Serif Display',serif;font-size:15px;color:#93c5fd;margin-bottom:.4rem}
+
+/* LAYOUT */
+.main{max-width:1080px;margin:0 auto;padding:1.5rem 2rem;display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:800px){.main{grid-template-columns:1fr}}
+.panel-left{position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow-y:auto;scrollbar-width:thin}
+
+/* CATEGORIA */
+.cat-block{background:var(--white);border:1.5px solid var(--rule);border-radius:8px;margin-bottom:.6rem;overflow:hidden}
+.cat-head{display:flex;align-items:center;justify-content:space-between;padding:.6rem .9rem;cursor:pointer;user-select:none;background:var(--slate-l);border-bottom:1px solid var(--rule)}
+.cat-head:hover{background:#e8f0fe}
+.cat-label{font-size:12px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:.5rem}
+.cat-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.cat-count{font-size:10px;font-weight:600;color:var(--muted);background:var(--rule);padding:2px 6px;border-radius:10px}
+.cat-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
+.cat-block.open .cat-arrow{transform:rotate(90deg)}
+.cat-items{display:none;padding:.4rem .5rem .6rem}
+.cat-block.open .cat-items{display:block}
+
+/* DADO — novo design com estados */
+.dato-wrap{margin-bottom:.5rem}
+.dato-name{font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:.3rem;padding:0 .2rem;line-height:1.4}
+.dato-desc{font-size:10px;color:var(--muted);margin-bottom:.35rem;padding:0 .2rem}
+.estado-group{display:flex;flex-wrap:wrap;gap:.25rem}
+
+/* Pílulas de estado */
+.est{font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;cursor:pointer;border:1.5px solid transparent;transition:all .12s;line-height:1.3;white-space:nowrap;user-select:none}
+/* normal — cinza */
+.est-n{background:#f3f4f6;color:#6b7280;border-color:#d1d5db}
+.est-n:hover{border-color:#9ca3af;color:var(--ink)}
+.est-n.sel{background:var(--slate-l);border-color:#6b7280;color:var(--ink)}
+/* risco — colorido por domínio */
+.est-r{background:#fff;border-color:var(--rule)}
+.est-r:hover{filter:brightness(.95)}
+/* states selecionados de risco */
+.est-r.sel{color:#fff}
+/* domínio cores para risco */
+.est-metabol.sel  {background:#1d4ed8;border-color:#1d4ed8}
+.est-metabol{color:#1d4ed8;border-color:#93c5fd}
+.est-cardio.sel   {background:#dc2626;border-color:#dc2626}
+.est-cardio{color:#dc2626;border-color:#fca5a5}
+.est-mental.sel   {background:#0f766e;border-color:#0f766e}
+.est-mental{color:#0f766e;border-color:#99f6e4}
+.est-onco.sel     {background:#be123c;border-color:#be123c}
+.est-onco{color:#be123c;border-color:#fda4af}
+.est-farmaco.sel  {background:#b45309;border-color:#b45309}
+.est-farmaco{color:#b45309;border-color:#fcd34d}
+.est-sono.sel     {background:#1d4ed8;border-color:#1d4ed8}
+.est-sono{color:#1d4ed8;border-color:#93c5fd}
+
+/* Barra de status */
+.sel-bar{background:var(--white);border:1.5px solid var(--rule);border-radius:8px;padding:.7rem .9rem;margin-bottom:.8rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.sel-count{font-size:12px;font-weight:600;color:var(--ink)}
+.sel-risk{font-size:11px;color:var(--red);font-weight:600}
+.sel-btns{display:flex;gap:.4rem}
+.sel-btn{font-size:11px;font-weight:600;padding:3px 10px;border:1.5px solid var(--rule);border-radius:4px;cursor:pointer;background:var(--white);color:var(--muted);transition:all .12s}
+.sel-btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn-calc{width:100%;font-family:'DM Serif Display',serif;font-size:17px;background:var(--ink);color:var(--bg);border:none;padding:.9rem;border-radius:6px;cursor:pointer;transition:background .15s;margin-top:.5rem}
+.btn-calc:hover{background:#2d4e8a}
+.btn-calc:disabled{opacity:.5;cursor:not-allowed}
+
+/* RESULTADOS */
+.empty-state{background:var(--white);border:1.5px dashed var(--rule2);border-radius:10px;padding:3rem 2rem;text-align:center}
+.empty-state .es-icon{font-size:36px;margin-bottom:.8rem}
+.empty-state h3{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:.4rem}
+.empty-state p{font-size:12px;color:var(--muted);max-width:280px;margin:0 auto}
+.results-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+.rm-title{font-family:'DM Serif Display',serif;font-size:18px}
+.rm-sub{font-size:11px;color:var(--muted)}
+.rm-pills{display:flex;gap:.4rem;flex-wrap:wrap}
+.rm-pill{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:3px}
+.pill-n1{background:var(--blue-l);color:var(--blue-d)}
+.pill-n2{background:var(--purple-l);color:var(--purple)}
+.pill-n3{background:var(--orange-l);color:var(--orange)}
+.pill-ment{background:var(--teal-l);color:var(--teal)}
+.sec-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:.8rem 0 .5rem;padding:.3rem .6rem;border-radius:4px;display:inline-block}
+
+/* CARDS */
+.card{background:var(--white);border:1.5px solid var(--rule);border-radius:10px;margin-bottom:1rem;overflow:hidden;transition:box-shadow .2s}
+.card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.card-head{padding:1rem 1.2rem .8rem;border-bottom:1px solid var(--rule)}
+.ch-level{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.ch-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);line-height:1.2;margin-bottom:3px}
+.ch-ref{font-size:10px;color:var(--muted);font-style:italic}
+.cov-row{display:flex;align-items:center;gap:.5rem;padding:.6rem 1.2rem}
+.cov-track{flex:1;height:6px;border-radius:3px;background:var(--rule);overflow:hidden;position:relative}
+.cov-fill-risk{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.cov-fill-normal{height:100%;border-radius:3px;position:absolute;top:0;left:0;opacity:.3}
+.cov-pct{font-size:12px;font-weight:700;min-width:34px;text-align:right}
+.risk-badge{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:3px;flex-shrink:0}
+.rb-low{background:var(--green-l);color:var(--green)}
+.rb-mod{background:var(--amber-l);color:var(--amber)}
+.rb-high{background:var(--red-l);color:var(--red)}
+.rb-info{background:var(--blue-l);color:var(--blue)}
+
+/* Alpha indicator — mostra proporção risco vs normal */
+.alpha-bar{display:flex;gap:.3rem;padding:0 1.2rem .6rem;align-items:center;flex-wrap:wrap}
+.alpha-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px}
+.atag-risk{background:var(--red-l);color:var(--red)}
+.atag-norm{background:var(--slate-l);color:var(--slate)}
+.atag-miss{background:#f8f8f6;color:#aaa;border:1px solid var(--rule)}
+
+/* Missing/inputs block */
+.missing-block{background:#fafaf8;border-top:1px solid var(--rule);padding:.7rem 1.2rem}
+.mb-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.missing-tags{display:flex;gap:.3rem;flex-wrap:wrap}
+.mtag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--amber-l);color:var(--amber);border:1px solid #fcd34d}
+
+/* Sugestões */
+.sugest-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
+@media(max-width:600px){.sugest-wrap{grid-template-columns:1fr}}
+.sug-panel{background:var(--white);padding:.9rem 1.1rem}
+.sug-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+.sug-label::before{content:'';display:block;width:7px;height:7px;border-radius:50%}
+.sug-med .sug-label{color:#5b21b6}.sug-med .sug-label::before{background:#7c3aed}
+.sug-pac .sug-label{color:var(--teal)}.sug-pac .sug-label::before{background:var(--teal)}
+.sug-item{display:flex;gap:.5rem;margin-bottom:.55rem;font-size:12px;line-height:1.5}
+.sug-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.sug-med .sug-dot{background:#7c3aed}.sug-pac .sug-dot{background:var(--teal)}
+.sug-ref{font-size:9px;color:var(--muted);margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--rule);font-style:italic;line-height:1.5}
+
+/* Chain bar */
+.chain-bar{background:var(--slate-l);border-top:1px solid var(--rule);padding:.6rem 1.2rem;font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.chain-node{padding:2px 8px;border-radius:3px;font-weight:600;font-size:10px}
+.chain-n1{background:var(--blue-l);color:var(--blue-d)}
+.chain-n2{background:var(--purple-l);color:var(--purple)}
+.chain-n3{background:var(--orange-l);color:var(--orange)}
+.chain-arr{color:var(--muted);font-size:10px}
+.disclaimer{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:6px;padding:.7rem 1rem;font-size:11px;color:#78350f;line-height:1.6;margin-bottom:1rem}
+#results-anchor{scroll-margin-top:1rem}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-in">
+    <div>
+      <div class="hdr-badge">Engine de Mapeamento · Saúde Masculina v3</div>
+      <h1>Inferência de saúde<br><em>por cobertura ponderada</em></h1>
+      <p>Selecione o <strong>resultado</strong> de cada dado. O engine calcula a prioridade de atenção clínica para cada dimensão do perfil de saúde masculina.</p>
+    </div>
+    <div class="hdr-formula">
+      <div class="eq">C<sub>m</sub> = &Sigma;(w<sub>i</sub>&middot;&alpha;<sub>i</sub>) / &Sigma;w<sub>i</sub></div>
+      <div>&alpha; = 1,0 se em risco &middot; 0,3 se normal &middot; 0 se não informado</div>
+      <div style="margin-top:.4rem;opacity:.7">Resultado clínico informado, não só presença do dado</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel-left">
+    <div class="sel-bar">
+      <div>
+        <div class="sel-count"><span id="sel-n">0</span> dados informados</div>
+        <div class="sel-risk" id="sel-risk-count" style="display:none"></div>
+      </div>
+      <div class="sel-btns">
+        <button class="sel-btn" onclick="clearAll()">Limpar</button>
+        <button class="sel-btn" onclick="presetSaude()">Preset</button>
+      </div>
+    </div>
+    <div id="cat-list"></div>
+    <button class="btn-calc" id="btn-calc" onclick="calcular()" disabled>Calcular inferências &rarr;</button>
+  </div>
+
+  <div class="panel-right" id="results-anchor">
+    <div class="empty-state" id="empty-state">
+      <div class="es-icon">&#x2695;</div>
+      <h3>Informe os resultados dos dados</h3>
+      <p>Selecione a faixa de cada exame ou achado clínico. Dados em risco ativam modelos com força total; dados normais contribuem parcialmente.</p>
+    </div>
+    <div id="results-panel" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// ESTADOS DOS DADOS
+// alpha: 1.0 = risco (contribui 100% do peso)
+//        0.3 = normal (dado presente mas não fator de risco)
+//        0.0 = não informado (padrão — não selecionado)
+//
+// Cada estado: {label, alpha, risco:bool}
+// ══════════════════════════════════════════════════════════════════
+const CATS = [
+  {id:'antropo',   label:'Antropometria',                  icon:'📏', color:'#e0f2fe'},
+  {id:'metabol',   label:'Metabólico / laboratorial',      icon:'🩸', color:'#fee2e2'},
+  {id:'cardio',    label:'Cardiovascular',                 icon:'❤️', color:'#ffe4e6'},
+  {id:'mental',    label:'Saúde mental',                   icon:'🧠', color:'#ede9fe'},
+  {id:'sono',      label:'Sono e circadiano',              icon:'🌙', color:'#dbeafe'},
+  {id:'comport',   label:'Comportamental',                 icon:'🏃', color:'#dcfce7'},
+  {id:'hx',        label:'Histórico e família',            icon:'📋', color:'#fef3c7'},
+  {id:'fenotip',   label:'Fenotipagem digital',            icon:'⌚', color:'#ccfbf1'},
+  {id:'gi',        label:'Gastrointestinal',               icon:'🫁', color:'#f0fdf4'},
+  {id:'prostata',  label:'Próstata',                       icon:'🎗️', color:'#fce7f3'},
+  {id:'onco',      label:'Oncológico',                     icon:'🔬', color:'#fff1f2'},
+  {id:'psicoonco', label:'Psico-oncológico',               icon:'💜', color:'#f5f3ff'},
+  {id:'inflamacao',label:'Inflamação',                     icon:'🧬', color:'#fff7ed'},
+];
+
+// ── Função auxiliar para estados ─────────────────────────────────
+function st(label, alpha, risco){ return {label, alpha, risco:!!risco}; }
+
+const DADOS = [
+  // ── Antropometria ─────────────────────────────────────────────
+  {id:'imc', cat:'antropo', nome:'IMC (kg/m²)', desc:'Índice de Massa Corporal', dom:'metabol',
+   estados:[
+     st('<25 — normal',0.3,false), st('25–29 — sobrepeso',0.6,true),
+     st('30–34 — obeso I',1.0,true), st('35–39 — obeso II',1.0,true), st('≥40 — obeso III',1.0,true)
+   ]},
+  {id:'cintura', cat:'antropo', nome:'Circunferência abdominal (cm)', desc:'Medida na altura do umbigo', dom:'metabol',
+   estados:[
+     st('<94cm — normal',0.3,false), st('94–101cm — risco',0.7,true), st('≥102cm — risco alto',1.0,true)
+   ]},
+  {id:'peso_desejado', cat:'antropo', nome:'Objetivo de perda de peso', desc:'Meta declarada', dom:'metabol',
+   estados:[
+     st('Manutenção / <5% peso',0.3,false), st('5–10% do peso',0.8,true), st('>10% do peso',1.0,true)
+   ]},
+  {id:'variacao_peso', cat:'antropo', nome:'Variação de peso recente (6m)', desc:'Ganho ou perda documentada', dom:'metabol',
+   estados:[
+     st('Estável (±2kg)',0.3,false), st('Ganho 3–7kg',0.8,true), st('Ganho >7kg',1.0,true), st('Perda inexplicada',1.0,true)
+   ]},
+
+  // ── Metabólico / laboratorial ─────────────────────────────────
+  {id:'glicemia', cat:'metabol', nome:'Glicemia em jejum (mg/dL)', desc:'Exame laboratorial', dom:'metabol',
+   estados:[
+     st('<100 — normal',0.3,false), st('100–125 — pré-DM',0.8,true), st('≥126 — DM2',1.0,true)
+   ]},
+  {id:'hba1c', cat:'metabol', nome:'HbA1c (%)', desc:'Hemoglobina glicada', dom:'metabol',
+   estados:[
+     st('<5,7% — normal',0.3,false), st('5,7–6,4% — pré-DM',0.8,true), st('≥6,5% — DM2',1.0,true)
+   ]},
+  {id:'colesterol', cat:'metabol', nome:'Colesterol total (mg/dL)', desc:'Colesterol total + frações', dom:'cardio',
+   estados:[
+     st('<200 — desejável',0.3,false), st('200–239 — limítrofe',0.7,true), st('≥240 — alto',1.0,true)
+   ]},
+  {id:'triglicerides', cat:'metabol', nome:'Triglicerídeos (mg/dL)', desc:'Componente da síndrome metabólica', dom:'metabol',
+   estados:[
+     st('<150 — normal',0.3,false), st('150–199 — limítrofe',0.7,true), st('≥200 — alto',1.0,true)
+   ]},
+  {id:'hdl', cat:'metabol', nome:'HDL (mg/dL)', desc:'Colesterol bom — <40 mg/dL = risco em homens', dom:'metabol',
+   estados:[
+     st('≥60 — protetor',0.1,false), st('41–59 — normal-baixo',0.3,false), st('≤40 — risco (SM)',1.0,true)
+   ]},
+  {id:'insulina', cat:'metabol', nome:'Insulina em jejum (µU/mL)', desc:'Proxy de resistência insulínica / HOMA-IR', dom:'metabol',
+   estados:[
+     st('<10 — normal',0.3,false), st('10–15 — limítrofe',0.7,true), st('>15 — hiperinsulinemia',1.0,true)
+   ]},
+  {id:'tsh', cat:'metabol', nome:'TSH (mUI/L)', desc:'Exclusão de hipotireoidismo', dom:'metabol',
+   estados:[
+     st('0,4–4,0 — normal',0.3,false), st('>4,0 — hipotireoidismo',1.0,true), st('<0,4 — hipertireoidismo',0.6,true)
+   ]},
+  {id:'testosterona', cat:'metabol', nome:'Testosterona total (ng/dL)', desc:'Relacionada à obesidade e SM', dom:'metabol',
+   estados:[
+     st('≥300 — normal',0.3,false), st('200–299 — baixo-normal',0.7,true), st('<200 — hipogonadismo',1.0,true)
+   ]},
+
+  // ── Cardiovascular ────────────────────────────────────────────
+  {id:'pressao', cat:'cardio', nome:'Pressão arterial (mmHg)', desc:'Sistólica/diastólica', dom:'cardio',
+   estados:[
+     st('<120/80 — ótima',0.1,false), st('120–129 / normal',0.3,false), st('130–139 / 80–89 — estágio 1',0.8,true), st('≥140/90 — estágio 2',1.0,true)
+   ]},
+  {id:'fc_repouso', cat:'cardio', nome:'FC em repouso (bpm)', desc:'Frequência cardíaca em repouso', dom:'cardio',
+   estados:[
+     st('<70 bpm — normal',0.3,false), st('70–79 bpm',0.5,false), st('80–99 bpm — elevada',0.8,true), st('≥100 bpm — taquicardia',1.0,true)
+   ]},
+  {id:'tabagismo', cat:'cardio', nome:'Tabagismo', desc:'Fumante atual, ex-fumante, nunca fumou', dom:'cardio',
+   estados:[
+     st('Nunca fumou',0.1,false), st('Ex-fumante >5 anos',0.3,false), st('Ex-fumante <5 anos',0.7,true), st('Fumante atual',1.0,true)
+   ]},
+  {id:'medic_antihiper', cat:'cardio', nome:'Anti-hipertensivo em uso', desc:'Medicamento para pressão alta', dom:'cardio',
+   estados:[
+     st('Não usa',0.1,false), st('Usa — PA controlada',0.6,true), st('Usa — PA não controlada',1.0,true)
+   ]},
+  {id:'diabetes', cat:'cardio', nome:'Diabetes diagnosticado', desc:'DM2 confirmado por exame', dom:'metabol',
+   estados:[
+     st('Não tem DM',0.1,false), st('Pré-diabetes',0.6,true), st('DM2 controlado',0.8,true), st('DM2 descompensado',1.0,true)
+   ]},
+
+  // ── Saúde mental ──────────────────────────────────────────────
+  {id:'phq2', cat:'mental', nome:'PHQ-2 (triagem depressão)', desc:'Score 0–6 — ≥3 positivo', dom:'mental',
+   estados:[
+     st('0–2 — negativo',0.3,false), st('3–4 — positivo leve',0.8,true), st('5–6 — positivo',1.0,true)
+   ]},
+  {id:'phq9', cat:'mental', nome:'PHQ-9 (depressão completa)', desc:'Score 0–27 com gravidade', dom:'mental',
+   estados:[
+     st('0–4 — sem depressão',0.3,false), st('5–9 — leve',0.7,true), st('10–14 — moderada',0.9,true), st('15–27 — grave',1.0,true)
+   ]},
+  {id:'gad7', cat:'mental', nome:'GAD-7 (ansiedade)', desc:'Score 0–21', dom:'mental',
+   estados:[
+     st('0–4 — normal',0.3,false), st('5–9 — leve',0.7,true), st('10–14 — moderada',0.9,true), st('15–21 — grave',1.0,true)
+   ]},
+  {id:'diag_mental', cat:'mental', nome:'Diagnóstico de saúde mental', desc:'Condição declarada', dom:'mental',
+   estados:[
+     st('Sem diagnóstico',0.1,false), st('Ansiedade / pânico',0.8,true), st('Depressão',0.9,true), st('Bipolar / psicose',1.0,true)
+   ]},
+  {id:'medic_psiq', cat:'mental', nome:'Medicação psiquiátrica em uso', desc:'Antidepressivos, ansiolíticos, estabilizadores', dom:'mental',
+   estados:[
+     st('Não usa',0.1,false), st('Usa — estável',0.6,true), st('Usa — instável / ajustando',1.0,true)
+   ]},
+  {id:'estresse_percebido', cat:'mental', nome:'Estresse percebido (PSS-10)', desc:'Escala de Estresse Percebido', dom:'mental',
+   estados:[
+     st('Baixo (0–13)',0.3,false), st('Moderado (14–26)',0.7,true), st('Alto (27–40)',1.0,true)
+   ]},
+  {id:'qualidade_vida', cat:'mental', nome:'Qualidade de vida (SF-12/36)', desc:'Instrumento genérico de QV', dom:'mental',
+   estados:[
+     st('Boa / preservada',0.3,false), st('Comprometida',0.8,true), st('Muito comprometida',1.0,true)
+   ]},
+  {id:'distress_onco', cat:'mental', nome:'Distress oncológico (DT / NCCN)', desc:'Distress Thermometer 0–10', dom:'mental',
+   estados:[
+     st('0–3 — baixo',0.3,false), st('4–6 — moderado',0.8,true), st('7–10 — alto',1.0,true)
+   ]},
+  {id:'medo_recorrencia', cat:'mental', nome:'Medo de recorrência (FCR)', desc:'Fear of Cancer Recurrence', dom:'mental',
+   estados:[
+     st('Baixo / ausente',0.3,false), st('Moderado',0.7,true), st('Alto / incapacitante',1.0,true)
+   ]},
+  {id:'suporte_social', cat:'mental', nome:'Suporte social percebido', desc:'MOS Social Support Survey', dom:'mental',
+   estados:[
+     st('Bom suporte',0.3,false), st('Suporte limitado',0.7,true), st('Isolado / sem suporte',1.0,true)
+   ]},
+  {id:'funcao_sexual', cat:'mental', nome:'Função sexual / IIEF', desc:'Índice Internacional de Função Erétil', dom:'mental',
+   estados:[
+     st('Normal (22–25)',0.3,false), st('Disfunção leve (12–21)',0.7,true), st('Disfunção grave (<12)',1.0,true)
+   ]},
+
+  // ── Sono ──────────────────────────────────────────────────────
+  {id:'sono_horas', cat:'sono', nome:'Duração do sono (h/noite)', desc:'Horas declaradas', dom:'sono',
+   estados:[
+     st('7–9h — adequado',0.3,false), st('6–6,9h — curto',0.7,true), st('<6h — insuficiente',1.0,true), st('>9h — excessivo',0.5,true)
+   ]},
+  {id:'sono_qualidade', cat:'sono', nome:'Qualidade do sono (ISI)', desc:'Índice de Severidade da Insônia', dom:'sono',
+   estados:[
+     st('0–7 — sem insônia',0.3,false), st('8–14 — insônia subclínica',0.7,true), st('15–21 — insônia moderada',0.9,true), st('22–28 — insônia grave',1.0,true)
+   ]},
+  {id:'apneia', cat:'sono', nome:'Apneia do sono (SAOS)', desc:'Diagnóstico ou suspeita clínica', dom:'sono',
+   estados:[
+     st('Sem apneia / descartada',0.1,false), st('Suspeita clínica',0.7,true), st('SAOS leve-moderada',0.9,true), st('SAOS grave',1.0,true)
+   ]},
+  {id:'sonolencia', cat:'sono', nome:'Sonolência diurna (Epworth)', desc:'Escala de Epworth 0–24', dom:'sono',
+   estados:[
+     st('0–10 — normal',0.3,false), st('11–16 — excessiva',0.8,true), st('17–24 — grave',1.0,true)
+   ]},
+  {id:'ritmo_circadiano', cat:'sono', nome:'Regularidade circadiana', desc:'Via wearable — consistência 24h', dom:'sono',
+   estados:[
+     st('Regular',0.3,false), st('Irregular moderado',0.7,true), st('Muito irregular',1.0,true)
+   ]},
+
+  // ── Comportamental ────────────────────────────────────────────
+  {id:'atv_fisica', cat:'comport', nome:'Nível de atividade física', desc:'Dias/semana de exercício moderado', dom:'metabol',
+   estados:[
+     st('≥150 min/sem — ativo',0.1,false), st('60–149 min/sem — insuficiente',0.6,true), st('<60 min/sem — sedentário',1.0,true)
+   ]},
+  {id:'dieta', cat:'comport', nome:'Qualidade da dieta', desc:'Ingestão de frutas, vegetais, ultraprocessados', dom:'metabol',
+   estados:[
+     st('Saudável / mediterrânea',0.1,false), st('Mista',0.4,false), st('Pobre / ultraprocessados',1.0,true)
+   ]},
+  {id:'alcool', cat:'comport', nome:'Consumo de álcool', desc:'Doses/semana', dom:'onco',
+   estados:[
+     st('Abstêmio / social (<7/sem)',0.2,false), st('Moderado (7–14/sem)',0.6,true), st('Intenso (>14/sem)',1.0,true)
+   ]},
+  {id:'tabaco', cat:'comport', nome:'Tabagismo (carga)', desc:'Cigarros/dia ou anos-maço', dom:'cardio',
+   estados:[
+     st('Nunca fumou',0.1,false), st('<10 cig/dia ou <10 anos-maço',0.6,true), st('≥10 cig/dia ou ≥10 anos-maço',1.0,true)
+   ]},
+  {id:'sedentarismo', cat:'comport', nome:'Tempo sentado (h/dia)', desc:'Comportamento sedentário independente do exercício', dom:'metabol',
+   estados:[
+     st('<6h/dia',0.2,false), st('6–9h/dia',0.6,true), st('≥10h/dia',1.0,true)
+   ]},
+
+  // ── Histórico e família ───────────────────────────────────────
+  {id:'idade', cat:'hx', nome:'Idade', desc:'Anos completos', dom:'metabol',
+   estados:[
+     st('<40 anos',0.2,false), st('40–49 anos',0.5,true), st('50–59 anos',0.8,true), st('≥60 anos',1.0,true)
+   ]},
+  {id:'hist_glicemia', cat:'hx', nome:'Histórico glicemia alta', desc:'Exame prévio elevado', dom:'metabol',
+   estados:[
+     st('Sem histórico',0.1,false), st('Glicemia alta isolada',0.8,true), st('Múltiplas ocorrências',1.0,true)
+   ]},
+  {id:'hist_familiar_dm', cat:'hx', nome:'Histórico familiar DM2', desc:'Familiar com diabetes', dom:'metabol',
+   estados:[
+     st('Sem histórico',0.1,false), st('Parente 2º grau (avô, tio)',0.5,true), st('Parente 1º grau (pai, irmão)',1.0,true)
+   ]},
+  {id:'hist_familiar_cv', cat:'hx', nome:'Histórico familiar cardiovascular', desc:'Doença cardíaca precoce em familiar', dom:'cardio',
+   estados:[
+     st('Sem histórico',0.1,false), st('Familiar com DCV >55 anos',0.5,true), st('Familiar com DCV <55 anos',1.0,true)
+   ]},
+  {id:'hist_familiar_prostata', cat:'hx', nome:'Histórico familiar — próstata', desc:'Pai ou irmão com câncer de próstata', dom:'onco',
+   estados:[
+     st('Sem histórico',0.1,false), st('1 familiar afetado',0.8,true), st('≥2 familiares ou início <60 anos',1.0,true)
+   ]},
+  {id:'glp1_historico', cat:'hx', nome:'Histórico de uso de GLP-1', desc:'Ozempic, Mounjaro, Semaglutida etc.', dom:'farmaco',
+   estados:[
+     st('Nunca usou',0.3,false), st('Usou — boa resposta',0.5,false), st('Usou — intolerância',0.8,true), st('Em uso atual',0.6,true)
+   ]},
+
+  // ── Fenotipagem digital ───────────────────────────────────────
+  {id:'hrv', cat:'fenotip', nome:'HRV (variabilidade cardíaca)', desc:'Via wearable — biomarcador de estresse e burnout', dom:'mental',
+   estados:[
+     st('Normal / alta',0.2,false), st('Reduzida (↓10–20%)',0.7,true), st('Muito reduzida (↓>20% crônico)',1.0,true)
+   ]},
+  {id:'sono_wearable', cat:'fenotip', nome:'Sono via wearable', desc:'Duração, eficiência e fase', dom:'sono',
+   estados:[
+     st('Normal (≥85% eficiência)',0.3,false), st('Degradado (75–84%)',0.7,true), st('Muito degradado (<75%)',1.0,true)
+   ]},
+  {id:'passos_dia', cat:'fenotip', nome:'Passos/dia (acelerômetro)', desc:'Contagem passiva via sensor', dom:'metabol',
+   estados:[
+     st('>8.000 passos/dia',0.2,false), st('5.000–8.000',0.5,true), st('<5.000 passos/dia',1.0,true)
+   ]},
+  {id:'uso_noturno', cat:'fenotip', nome:'Uso noturno do dispositivo', desc:'Após 22h — proxy de cronotipo', dom:'mental',
+   estados:[
+     st('Raro ou ausente',0.2,false), st('Frequente (>3 noites/sem)',0.8,true), st('Diário',1.0,true)
+   ]},
+  {id:'vel_digitacao', cat:'fenotip', nome:'Velocidade de digitação', desc:'WPM — lentificação correlaciona com depressão', dom:'mental',
+   estados:[
+     st('Normal / sem mudança',0.2,false), st('Lentificação moderada',0.7,true), st('Lentificação marcada',1.0,true)
+   ]},
+
+  // ── Gastrointestinal ──────────────────────────────────────────
+  {id:'gi_drge', cat:'gi', nome:'DRGE / refluxo', desc:'Doença do Refluxo Gastroesofágico', dom:'farmaco',
+   estados:[
+     st('Ausente',0.1,false), st('Leve / controlada',0.5,true), st('Grave / refratária',1.0,true)
+   ]},
+  {id:'gi_sii', cat:'gi', nome:'SII (Síndrome do Intestino Irritável)', desc:'SII diagnosticada', dom:'farmaco',
+   estados:[
+     st('Ausente',0.1,false), st('Leve',0.5,true), st('Moderada-grave',1.0,true)
+   ]},
+  {id:'gi_gastroparesia', cat:'gi', nome:'Gastroparesia', desc:'Esvaziamento gástrico retardado — contraindicação GLP-1', dom:'farmaco',
+   estados:[
+     st('Ausente',0.1,false), st('Suspeita',0.7,true), st('Confirmada — contraindicação',1.0,true)
+   ]},
+  {id:'sintomas_gi', cat:'gi', nome:'Sintomas GI atuais', desc:'Náusea, diarreia, constipação, distensão', dom:'farmaco',
+   estados:[
+     st('Ausentes',0.1,false), st('Leves / ocasionais',0.5,true), st('Frequentes / intensos',1.0,true)
+   ]},
+
+  // ── Próstata ──────────────────────────────────────────────────
+  {id:'psa', cat:'prostata', nome:'PSA total (ng/mL)', desc:'Antígeno Prostático Específico', dom:'onco',
+   estados:[
+     st('<2,5 — baixo',0.2,false), st('2,5–3,9 — zona cinza',0.6,true), st('4,0–9,9 — elevado',0.9,true), st('≥10 — muito elevado',1.0,true)
+   ]},
+  {id:'psa_livre', cat:'prostata', nome:'%PSA livre', desc:'%PSA livre/total — melhora especificidade', dom:'onco',
+   estados:[
+     st('>25% — baixo risco',0.2,false), st('15–25% — intermediário',0.6,true), st('<15% — risco de neoplasia',1.0,true)
+   ]},
+  {id:'dre', cat:'prostata', nome:'Toque retal (DRE)', desc:'Resultado do exame digital', dom:'onco',
+   estados:[
+     st('Normal',0.2,false), st('Alterado — nódulo / induração',1.0,true)
+   ]},
+  {id:'sint_urinarios', cat:'prostata', nome:'Sintomas urinários (IPSS)', desc:'Escore Internacional de Sintomas Prostáticos', dom:'onco',
+   estados:[
+     st('0–7 — leve',0.3,false), st('8–19 — moderado',0.7,true), st('20–35 — grave',1.0,true)
+   ]},
+
+  // ── Oncológico ────────────────────────────────────────────────
+  {id:'hist_familiar_crc', cat:'onco', nome:'Histórico familiar — câncer colorretal', desc:'Pai, irmão ou filho com CRC', dom:'onco',
+   estados:[
+     st('Sem histórico',0.1,false), st('1 familiar >60 anos',0.6,true), st('1 familiar <60 anos ou 2+ familiares',1.0,true)
+   ]},
+  {id:'sangue_fezes', cat:'onco', nome:'FIT / Sangue nas fezes', desc:'Teste imunoquímico fecal', dom:'onco',
+   estados:[
+     st('Negativo',0.1,false), st('Positivo',1.0,true)
+   ]},
+  {id:'dieta_vermelha', cat:'onco', nome:'Carne vermelha / processada', desc:'Consumo semanal', dom:'onco',
+   estados:[
+     st('<300g/sem — baixo',0.2,false), st('300–500g/sem — moderado',0.6,true), st('>500g/sem — alto',1.0,true)
+   ]},
+  {id:'historico_cancer', cat:'onco', nome:'Histórico pessoal de câncer', desc:'Diagnóstico oncológico prévio', dom:'onco',
+   estados:[
+     st('Sem histórico',0.1,false), st('Histórico — remissão >5 anos',0.5,true), st('Histórico — remissão <5 anos',1.0,true)
+   ]},
+
+  // ── Psico-oncológico ──────────────────────────────────────────
+  // (usa distress_onco, medo_recorrencia, suporte_social — já em 'mental')
+
+  // ── Inflamação ────────────────────────────────────────────────
+  {id:'pcr_alta', cat:'inflamacao', nome:'PCR ultrassensível (mg/L)', desc:'Marcador de inflamação crônica', dom:'metabol',
+   estados:[
+     st('<1 — baixo risco',0.2,false), st('1–3 — moderado',0.5,true), st('>3 — alto / inflamação crônica',1.0,true)
+   ]},
+  {id:'leucocitos', cat:'inflamacao', nome:'Leucócitos totais (/mm³)', desc:'Leucocitose leve — marcador de inflamação', dom:'metabol',
+   estados:[
+     st('4.000–8.000 — normal',0.2,false), st('8.001–11.000 — elevado leve',0.7,true), st('>11.000 — leucocitose',1.0,true)
+   ]},
+  {id:'ferritina', cat:'inflamacao', nome:'Ferritina sérica (ng/mL)', desc:'Elevada em inflamação e resistência insulínica', dom:'metabol',
+   estados:[
+     st('<200 — normal',0.2,false), st('200–500 — elevada',0.7,true), st('>500 — muito elevada',1.0,true)
+   ]},
+  {id:'adiponectina', cat:'inflamacao', nome:'Adiponectina sérica (µg/mL)', desc:'Baixa na obesidade — adipocina antiproliferativa', dom:'metabol',
+   estados:[
+     st('≥10 — adequada',0.2,false), st('5–9 — reduzida',0.7,true), st('<5 — muito baixa',1.0,true)
+   ]},
+  {id:'igf1', cat:'inflamacao', nome:'IGF-1 (ng/mL)', desc:'Elevado na obesidade/hiperinsulinemia — proliferação celular', dom:'metabol',
+   estados:[
+     st('Normal para idade',0.2,false), st('Elevado leve',0.7,true), st('Muito elevado',1.0,true)
+   ]},
+];
+
+const DADOS_IDX = Object.fromEntries(DADOS.map(d=>[d.id,d]));
+
+// Estado atual de cada dado: Map<id, {estado: index, alpha: float}>
+const estadoAtual = new Map();
+
+// ══════════════════════════════════════════════════════════════════
+// MODELOS N1–N3 (idênticos ao v2, apenas calcCov muda)
+// ══════════════════════════════════════════════════════════════════
+const N1 = [
+{id:'n1_obesidade',nivel:'N1',nome:'Obesidade e perfil adiposo',dominio:'Metabolismo',
+ ref:'ABESO 2022; IDF 2006',perf:'Classif. direta; circunferência abdominal: Sens 82% para SM em homens',
+ alertMental:false,
+ vars:[{id:'imc',p:35},{id:'cintura',p:25},{id:'peso_desejado',p:15},{id:'atv_fisica',p:15},{id:'variacao_peso',p:10}],
+ medSugest:['Classificar obesidade pelo IMC e circunferência abdominal (ABESO 2022). IMC ≥30 = indicação de intervenção ativa.','Meta de perda de peso: 5-10% do peso inicial já reduz risco cardiometabólico significativamente.','Avaliar elegibilidade GLP-1: IMC ≥30 ou ≥27 com comorbidade (ABESO 2022; SBD 2024).'],
+ patSugest:['Seu IMC e medidas indicam o grau de sobrepeso e o risco associado. Essa informação guia o tipo de tratamento mais adequado.','Perder entre 5 a 10% do peso já traz benefícios reais para o coração, diabetes e pressão arterial.'],
+ ref_card:'ABESO Diretrizes Brasileiras de Obesidade 2022; IDF Consensus 2006 (cintura masculina)'},
+{id:'n1_dm2',nivel:'N1',nome:'Risco de diabetes tipo 2 (FINDRISC)',dominio:'Metabolismo',
+ ref:'Lindström & Tuomilehto 2003, Diabetes Care 26(3):725; Aschner et al. 2023, Front Endocrinol (n=47.267 LATAM)',
+ perf:'AUC=0,76; Sens 78-81%, Spec 76-77%; OR=63x para hist. glicemia alta em LATAM',
+ alertMental:false,
+ vars:[{id:'hist_glicemia',p:25},{id:'hist_familiar_dm',p:19},{id:'imc',p:18},{id:'atv_fisica',p:15},{id:'medic_antihiper',p:12},{id:'idade',p:11}],
+ medSugest:['FINDRISC ≥12: solicitar glicemia jejum + HbA1c. Pré-diabetes: intervenção no estilo de vida + Metformina (SBD 2024).','IMC ≥30 + risco alto: avaliar farmacoterapia adjuvante (GLP-1 ou Metformina).','Histórico familiar de 1º grau: triagem anual após diagnóstico de risco.'],
+ patSugest:['Um exame de sangue simples pode identificar pré-diabetes muito antes de desenvolver a doença. Tratado cedo, é reversível.','Perder 5-7% do peso reduz o risco de desenvolver diabetes em até 58%.'],
+ ref_card:'Lindström & Tuomilehto, Diabetes Care 2003;26(3):725; Aschner et al., Front Endocrinol 2023;14:1188784 (n=47.267)'},
+{id:'n1_cardio',nivel:'N1',nome:'Risco cardiovascular (Framingham)',dominio:'Cardiovascular',
+ ref:"D'Agostino et al. 2008, Circulation 118(24):2400 — Framingham General CVD Risk Score",
+ perf:'AUC=0,794 (IC95% 0,743-0,844)',alertMental:false,
+ vars:[{id:'pressao',p:28},{id:'colesterol',p:22},{id:'tabagismo',p:14},{id:'diabetes',p:14},{id:'idade',p:14},{id:'medic_antihiper',p:8}],
+ medSugest:['Calcular Escore de Risco Global SBC após obter PA, colesterol, glicemia.','Estatinas: LDL elevado + risco CV >10% em 10 anos — conforme SBC Diretriz 2022.','Referência a cardiologista se ≥2 fatores de risco ou idade >55 anos.'],
+ patSugest:['Conhecer seu risco cardiovascular em 10 anos é o primeiro passo para agir antes que algo aconteça.','Cada fator de risco controlado reduz o risco de forma aditiva.'],
+ ref_card:"D'Agostino RB et al., Circulation 2008;118(24):2400-2407 (AUC=0,794)"},
+{id:'n1_sindrome_met_vars',nivel:'N1',nome:'Componentes da síndrome metabólica',dominio:'Metabolismo',
+ ref:'Alberti et al. 2009, Circulation 120(16):1640 (IDF/AHA/NHLBI Joint Statement)',
+ perf:'3/5 critérios: Sens 84%, Spec 78% para DCV 10 anos',alertMental:false,
+ vars:[{id:'cintura',p:22},{id:'triglicerides',p:20},{id:'hdl',p:20},{id:'pressao',p:20},{id:'glicemia',p:18}],
+ medSugest:['Contar critérios: ≥3 = síndrome metabólica estabelecida (Alberti 2009).','Solicitar perfil metabólico completo se critérios incompletos.','Priorizar redução de triglicerídeos e cintura abdominal.'],
+ patSugest:['A síndrome metabólica é um conjunto de fatores que, juntos, aumentam muito o risco de doenças sérias. É tratável.','Mudanças de estilo de vida + medicamentos, quando indicados, podem reverter a síndrome completamente.'],
+ ref_card:'Alberti KGMM et al., Circulation 2009;120:1640; Mottillo S et al., JACC 2010;56:1113 (n=951.083)'},
+{id:'n1_resistencia_insulinica',nivel:'N1',nome:'Resistência insulínica / hiperinsulinemia',dominio:'Metabolismo',
+ ref:'Matthews et al. 1985 (HOMA-IR); NCI Obesity & Cancer Fact Sheet 2024; Pollak 2012, Nat Rev Cancer',
+ perf:'HOMA-IR >2,5: Sens 77%, Spec 67%; Hiperinsulinemia: OR=2,1-4,2 para cânceres colorretais, pancreáticos, renais',
+ alertMental:false,
+ vars:[{id:'insulina',p:35},{id:'hba1c',p:25},{id:'glicemia',p:18},{id:'imc',p:12},{id:'igf1',p:10}],
+ medSugest:['HOMA-IR = (insulina em jejum µU/mL x glicemia mg/dL) / 405. >2,5 = resistência insulínica.','RI + obesidade: avaliar metformina mesmo sem DM2. Reduz progressão para DM2 em 31% (DPP 2002).','IGF-1 elevado + obesidade: mecanismo ligando obesidade a 13 tipos de câncer (IARC 2020).'],
+ patSugest:['A resistência à insulina é como o motor do carro respondendo mal ao combustível — sinal de que o metabolismo precisa de atenção.','Tratar isso agora, antes do diabetes se instalar, é muito mais fácil e eficaz.'],
+ ref_card:'Matthews DR et al., Diabetologia 1985;28(7):412-419 (HOMA-IR); NCI Obesity & Cancer Fact Sheet 2024'},
+{id:'n1_inflamacao_cronica',nivel:'N1',nome:'Inflamação crônica de baixo grau',dominio:'Metabolismo',
+ ref:'ERFC 2010, JAMA (n=160.309); Hotamisligil 2017, Cell; Coussens & Werb 2002, Nature',
+ perf:'PCR-us >3 mg/L: HR=1,78 para eventos CV (ERFC 2010). Meta-inflamação: mecanismo ligando obesidade a 13 tipos de câncer.',
+ alertMental:false,
+ vars:[{id:'pcr_alta',p:35},{id:'imc',p:22},{id:'cintura',p:18},{id:'adiponectina',p:15},{id:'leucocitos',p:10}],
+ medSugest:['PCR-us >3 mg/L: excluir infecção/autoimune. Repetir em 2 semanas se valor alto.','PCR persistentemente elevado em obeso: perda de 10% do peso reduz PCR em 25-40%.','PCR + obesidade + SM = fenótipo MUOW/OB: rastreamento oncológico intensificado.'],
+ patSugest:['Inflamação crônica de baixo grau é silenciosa mas real — mede-se no sangue e é tratável.','Perder peso reduz ativamente essa inflamação, melhorando risco de diabetes, doenças do coração e câncer.'],
+ ref_card:'Emerging Risk Factors Collaboration, JAMA 2010;303(12):1187 (PCR, n=160.309); IARC World Cancer Report 2020'},
+{id:'n1_depressao',nivel:'N1',nome:'Triagem de depressão (PHQ-2/9)',dominio:'Saúde mental',
+ ref:'Kroenke & Spitzer 2002 (PHQ-2); Kroenke et al. 2001 (PHQ-9); Moreno et al. 2016 (validação BR)',
+ perf:'PHQ-2≥3: Sens 83%, Spec 92% (Kroenke 2003). PHQ-9: AUC=0,95 para depressão maior (Moreno 2016)',
+ alertMental:true,
+ vars:[{id:'phq9',p:45},{id:'phq2',p:25},{id:'diag_mental',p:20},{id:'medic_psiq',p:10}],
+ medSugest:['PHQ-2≥3: aplicar PHQ-9 completo. PHQ-9≥10: encaminhar psiquiatria ou iniciar antidepressivo.','Verificar interações: bupropiona contraindicada em depressão não controlada. Bipolar: contraindicada.','GLP-1: dados emergentes de melhora do PHQ-9 com semaglutida (Mansur 2023).'],
+ patSugest:['A saúde mental é parte integral da saúde física. Tratar a depressão facilita perder peso e dormir melhor.','Se você tem sentido tristeza ou falta de interesse, falar sobre isso com seu médico abre caminho para um tratamento mais eficaz.'],
+ ref_card:'Kroenke K et al., Medical Care 2003;41(11):1284 (PHQ-2, Sens 83%, Spec 92%); Moreno RA et al., Rev Bras Psiquiatr 2016'},
+{id:'n1_ansiedade',nivel:'N1',nome:'Triagem de ansiedade (GAD-7)',dominio:'Saúde mental',
+ ref:'Spitzer et al. 2006, Arch Intern Med; García-Batista 2018 (validação latinos)',
+ perf:'GAD-7≥10: Sens 89%, Spec 82%; AUC=0,91 em adultos latino-americanos',
+ alertMental:true,
+ vars:[{id:'gad7',p:60},{id:'estresse_percebido',p:25},{id:'diag_mental',p:15}],
+ medSugest:['GAD-7≥10: encaminhar avaliação psiquiátrica. ISRS têm perfil metabólico favorável em obesos.','Avaliar se ansiedade está driving comportamentos alimentares — TCC pode ser mais eficaz que farmacoterapia isolada.'],
+ patSugest:['Ansiedade e excesso de peso se influenciam mutuamente. Tratar a ansiedade frequentemente facilita o processo de emagrecimento.'],
+ ref_card:'Spitzer RL et al., Arch Intern Med 2006;166(10):1092 (GAD-7); García-Batista ZE et al. 2018 (AUC=0,91)'},
+{id:'n1_sono',nivel:'N1',nome:'Qualidade do sono e apneia',dominio:'Sono',
+ ref:'AASM Consensus 2015; ISI — Morin 2011; Cappuccio 2008 (meta-análise n=634.511)',
+ perf:'ISI: AUC=0,87 para insônia clinicamente significativa. SAOS+obesidade: OR=3,5 para progressão DM2',
+ alertMental:false,
+ vars:[{id:'apneia',p:30},{id:'sono_qualidade',p:28},{id:'sono_horas',p:22},{id:'sonolencia',p:12},{id:'ritmo_circadiano',p:8}],
+ medSugest:['SAOS: oximetria noturna domiciliar como triagem custo-efetiva. Polissonografia se positiva ou alta suspeita.','Insônia: CBTI (TCC para insônia) é primeira linha — eficácia superior a medicamentos a longo prazo (AASM 2021).',
+  '<6h/noite + obesidade: tratar o sono pode potencializar a perda de peso.'],
+ patSugest:['Dormir mal interfere diretamente no peso: o corpo regula o apetite de forma diferente quando você dorme pouco.','Se você ronca muito ou acorda cansado, pode ter apneia do sono — muito tratável.'],
+ ref_card:'AASM Consensus Sleep Guidelines 2015; Cappuccio FP et al., Sleep 2008;31(5):619 (meta-análise n=634.511)'},
+{id:'n1_burnout',nivel:'N1',nome:'Burnout ocupacional (fenotipagem)',dominio:'Saúde mental',
+ ref:'Barac et al. JMIR 2024 (e50253); PMC12655262 2025; Maslach 2016 (MBI)',
+ perf:'HRV crônica reduzida + sono degradado: Sens 71-83% em profissionais de saúde (Barac 2024)',
+ alertMental:true,
+ vars:[{id:'hrv',p:35},{id:'sono_wearable',p:25},{id:'passos_dia',p:15},{id:'uso_noturno',p:12},{id:'vel_digitacao',p:8},{id:'ritmo_circadiano',p:5}],
+ medSugest:['HRV reduzida + sono degradado cronicamente: avaliar burnout com MBI (Maslach Burnout Inventory).','Burnout impacta diretamente o metabolismo: cortisol crônico eleva glicemia, PA e gordura visceral.'],
+ patSugest:['Seu corpo está enviando sinais de que está sobrecarregado. Isso não é fraqueza — é dado biológico.'],
+ ref_card:'Barac EF et al., JMIR 2024;26:e50253 (wearables burnout, Sens 71-83%)'},
+{id:'n1_elegib_glp1',nivel:'N1',nome:'Elegibilidade farmacológica (GLP-1)',dominio:'Farmacologia',
+ ref:'FDA Ozempic 2021; FDA Mounjaro 2022; SBD 2024; ABESO 2022',
+ perf:'STEP 1: -14,9% peso (semaglutida 2,4mg). SURMOUNT-1: -20,9% (tirzepatida 15mg)',
+ alertMental:false,
+ vars:[{id:'imc',p:30},{id:'gi_gastroparesia',p:25},{id:'hist_familiar_prostata',p:15},{id:'diag_mental',p:15},{id:'glp1_historico',p:15}],
+ medSugest:['Critérios: IMC ≥30 OU ≥27 + comorbidade. Verificar contraindicações absolutas: CMT, NEM-2, pancreatite, gastroparesia.','Titulação: 0,25mg/sem x4 → escalonar. Manejo de náusea: refeições pequenas e fracionadas.'],
+ patSugest:['Medicamentos modernos para perda de peso trabalham reduzindo o apetite de forma natural.','Seu médico vai verificar se não há nada que impeça o uso — a maioria tolera bem com a titulação gradual.'],
+ ref_card:'FDA PI Ozempic 2021; Mounjaro 2022; Davies M et al., NEJM 2021;384:989 (STEP 1); ABESO 2022; SBD 2024'},
+{id:'n1_prostata',nivel:'N1',nome:'Risco de câncer de próstata',dominio:'Oncologia',
+ ref:'Ross et al. 2007, J Clin Oncol 25(24):3561; Barros et al. 2015 Anticancer Res (Barretos, n=1313)',
+ perf:'Nomograma Barretos: AUC=0,766. PSA isolado: AUC=0,72 em atenção primária',
+ alertMental:false,
+ vars:[{id:'psa',p:35},{id:'psa_livre',p:20},{id:'idade',p:18},{id:'hist_familiar_prostata',p:15},{id:'dre',p:7},{id:'sint_urinarios',p:5}],
+ medSugest:['PSA >4 ng/mL ou >2,5 ng/mL em <60 anos: encaminhar urologista.','Rastreamento a partir dos 50 anos (45 com história familiar). INCA 2020: decisão compartilhada.','%PSA livre: solicitar se PSA 4-10 ng/mL.'],
+ patSugest:['Um exame de sangue simples (PSA) rastreia câncer de próstata na fase mais tratável.','PSA elevado não significa câncer — tem muitas causas benignas. Mas é o sinal para investigar.'],
+ ref_card:'Ross RW et al., J Clin Oncol 2007;25(24):3561 (AUC=0,74-0,77); Barros et al., Anticancer Res 2015;35(5):2881 (n=1313); AUA 2023'},
+{id:'n1_cancer_crc',nivel:'N1',nome:'Risco de câncer colorretal (LiFeCRC)',dominio:'Oncologia',
+ ref:'LiFeCRC — Ibáñez-Sanz 2017, Sci Rep (EPIC n=138.000); Kurth 2007 Am J Med (PHS n=21.581); BMC Cancer 2025 (n=394.000)',
+ perf:'LiFeCRC homens: AUC=0,76-0,77 (HUNT n=78.580). Kurth lifestyle score: OR=15,29 (IC95% 6,19-37,81)',
+ alertMental:false,
+ vars:[{id:'idade',p:28},{id:'hist_familiar_crc',p:20},{id:'imc',p:15},{id:'alcool',p:12},{id:'tabagismo',p:10},{id:'dieta_vermelha',p:8},{id:'atv_fisica',p:5},{id:'sangue_fezes',p:2}],
+ medSugest:['Colonoscopia precoce (<45 anos) se ≥2 fatores de risco (hist. familiar, obesidade, tabagismo, FIT+).','FIT a cada 2 anos a partir dos 45 anos. Positivo = colonoscopia urgente em até 30 dias.','Aspirina 100mg >50 anos com risco CV moderado: reduz CRC em 20-30%.'],
+ patSugest:['Câncer de intestino é um dos mais preveníveis. A colonoscopia detecta pólipos antes que virem câncer.','Com o seu perfil, fazer esse rastreamento mais cedo é muito mais inteligente do que esperar sintomas.'],
+ ref_card:'Ibáñez-Sanz G et al., Sci Rep 2017;7:3765 (LiFeCRC, AUC=0,77); Kurth T et al., Am J Med 2007;120:257 (OR=15,29); USPSTF 2021'},
+{id:'n1_distress_onco',nivel:'N1',nome:'Distress oncológico (NCCN DT)',dominio:'Saúde mental',
+ ref:'Mitchell 2007, J Clin Oncol (meta-análise k=38); NCCN Guidelines Distress Management v2.2024',
+ perf:'DT≥4: Sens 77-82%, Spec 72-78% para distress clínico (Mitchell 2007, k=38)',
+ alertMental:true,
+ vars:[{id:'distress_onco',p:40},{id:'phq9',p:25},{id:'medo_recorrencia',p:20},{id:'suporte_social',p:15}],
+ medSugest:['DT≥4: encaminhar psico-oncologia. PHQ-9≥10: iniciar antidepressivo ou TCC.','Rastreamento sistemático: DT + PHQ-2 em toda consulta oncológica (NCCN Guidelines nível 1A).','Depressão em paciente oncológico aumenta mortalidade em 23-83%.'],
+ patSugest:['Tratar a mente durante o tratamento do câncer não é luxo — é parte essencial do tratamento.'],
+ ref_card:'Mitchell AJ, J Clin Oncol 2007;25(29):4670 (DT meta-análise k=38); NCCN Guidelines v2.2024'},
+{id:'n1_qualidade_vida',nivel:'N1',nome:'Qualidade de vida (SF-12/36)',dominio:'Bem-estar',
+ ref:'Kolotkin & Andersen 2017, Obes Rev (k=89); Ware & Sherbourne 1992 (SF-36)',
+ perf:'SF-36: -8 a -15 pts em obesos vs. normopeso (Kolotkin 2017, k=89)',
+ alertMental:false,
+ vars:[{id:'qualidade_vida',p:45},{id:'funcao_sexual',p:25},{id:'sono_qualidade',p:15},{id:'atv_fisica',p:10},{id:'estresse_percebido',p:5}],
+ medSugest:['SF-36/SF-12 como outcome primário: mais sensível a mudanças percebidas.','Disfunção erétil em obeso: frequentemente resolve com perda de peso + tratamento da SM.'],
+ patSugest:['A qualidade de vida — como você se sente no dia a dia — é o objetivo final de qualquer tratamento.'],
+ ref_card:'Kolotkin RL & Andersen JR, Obes Rev 2017;18(7):773 (k=89); Ware JE & Sherbourne CD, Med Care 1992;30(6):473 (SF-36)'},
+{id:'n1_hiperinsulinemia_cancer',nivel:'N1',nome:'Hiperinsulinemia e risco oncológico metabólico',dominio:'Oncologia',
+ ref:'Mahamat-Saleh et al. 2024, British J Cancer (IARC meta-análise, n=797.193); NCI 2024; PMC10086630 JNCI 2023',
+ perf:'MUOW/OB: SRR=1,24 CRC; 1,42 tireoide; 1,71 rim; 1,35 pâncreas; 1,81 fígado (Mahamat-Saleh 2024, IARC)',
+ alertMental:false,
+ vars:[{id:'imc',p:22},{id:'insulina',p:20},{id:'glicemia',p:18},{id:'pcr_alta',p:15},{id:'triglicerides',p:12},{id:'igf1',p:8},{id:'adiponectina',p:5}],
+ medSugest:['Solicitar PCR-us, insulina em jejum, IGF-1, adiponectina — perfil de risco oncológico metabólico.','GLP-1: associado a redução de risco em 10/13 cânceres relacionados à obesidade (T2DM, n=1,6 mi).','Rastreamento oncológico intensificado em MUOW/OB.'],
+ patSugest:['A combinação de excesso de peso e metabolismo desregulado aumenta o risco de vários cânceres.','Tratar o metabolismo agora pode reduzir ativamente esse risco futuro.'],
+ ref_card:'Mahamat-Saleh Y et al., British J Cancer 2024;131(9):1480 (IARC, n=797.193); NCI Obesity & Cancer Fact Sheet 2024'},
+];
+
+const N2 = [
+{id:'n2_sindrome_met',nivel:'N2',nome:'Síndrome metabólica integrada',dominio:'Metabolismo',
+ ref:'Alberti 2009, Circulation; GBD 2019 Lancet',perf:'AUC=0,82 para DCV 10 anos; SM: RR=2,35 DCV, RR=5,17 DM2',alertMental:false,
+ needs:['n1_cardio','n1_dm2','n1_sindrome_met_vars','n1_obesidade'],
+ pesos:{'n1_cardio':0.30,'n1_dm2':0.28,'n1_sindrome_met_vars':0.25,'n1_obesidade':0.17},min:2,
+ medSugest:['Solicitar perfil metabólico completo: glicemia, HbA1c, perfil lipídico, insulina, PCR-us.','Avaliar testosterona total: SM associada a hipogonadismo em 40-50% dos casos.'],
+ patSugest:['Você tem múltiplos fatores de risco metabólico que se somam. Juntos, aumentam muito o risco de diabetes e doenças do coração.','Perder 5-10% do peso pode reverter vários desses fatores simultaneamente.'],
+ ref_card:'Alberti KGMM et al., Circulation 2009;120:1640; Mottillo S et al., JACC 2010;56:1113 (n=951.083)'},
+{id:'n2_saude_mental_peso',nivel:'N2',nome:'Saúde mental e emagrecimento',dominio:'Psicossomático',
+ ref:'Luppino 2010 Arch Gen Psychiatry (n=55.387); Lancet Psychiatry 2025',
+ perf:'OR=1,55 bidirecional obesidade-depressão (Luppino 2010)',alertMental:true,
+ needs:['n1_depressao','n1_obesidade','n1_sono','n1_ansiedade'],
+ pesos:{'n1_depressao':0.35,'n1_obesidade':0.30,'n1_sono':0.20,'n1_ansiedade':0.15},min:2,
+ medSugest:['Tratar depressão e obesidade em paralelo — não sequencialmente (Lancet Psychiatry 2025).','Avaliar se medicação psiquiátrica atual causa ganho de peso (antipsicóticos, lítio, paroxetina).'],
+ patSugest:['Saúde mental e peso corporal se influenciam mutuamente. Cuidar de um tende a melhorar o outro.'],
+ ref_card:'Luppino FS et al., Arch Gen Psychiatry 2010;67(3):220 (n=55.387); Lancet Psychiatry 2025'},
+{id:'n2_risco_cardiomet',nivel:'N2',nome:'Risco cardiometabólico integrado',dominio:'Cardiovascular',
+ ref:'GBD 2019 Lancet 396:1204; ESC Guidelines 2021; SBC/SBD 2022',
+ perf:'AUC=0,78-0,84 para eventos CV 10 anos',alertMental:false,
+ needs:['n1_cardio','n2_sindrome_met','n1_dm2'],
+ pesos:{'n1_cardio':0.40,'n2_sindrome_met':0.35,'n1_dm2':0.25},min:2,
+ medSugest:['Calcular Escore de Risco Global completo após obter PA, colesterol, glicemia.','Estatinas: LDL elevado + risco CV >10% em 10 anos.'],
+ patSugest:['Seu conjunto de fatores pede atenção ao coração. Isso não é alarme — é oportunidade de agir.'],
+ ref_card:"GBD 2019 Risk Factors Collaborators, Lancet 2020;396:1204; ESC Guidelines 2021"},
+{id:'n2_elegib_completa',nivel:'N2',nome:'Elegibilidade integrada para GLP-1',dominio:'Farmacologia',
+ ref:'Davies 2021 NEJM (STEP 1); Jastreboff 2022 NEJM (SURMOUNT-1)',
+ perf:'STEP 1: -14,9%; SURMOUNT-1: -20,9%',alertMental:false,
+ needs:['n1_elegib_glp1','n1_obesidade','n1_depressao','n1_sono'],
+ pesos:{'n1_elegib_glp1':0.40,'n1_obesidade':0.35,'n1_depressao':0.15,'n1_sono':0.10},min:2,
+ medSugest:['Verificar contraindicações absolutas: CMT, NEM-2, pancreatite, gastroparesia.','Titulação lenta reduz náusea e melhora adesão.'],
+ patSugest:['Medicamentos modernos para perda de peso podem ser uma opção importante para você.'],
+ ref_card:'Davies M et al., NEJM 2021;384:989 (STEP 1); Jastreboff AM et al., NEJM 2022;387:205 (SURMOUNT-1)'},
+{id:'n2_sono_mental',nivel:'N2',nome:'Sono e saúde mental integrados',dominio:'Psicossomático',
+ ref:'Baglioni 2016 Sleep Med Rev (k=21, n=172.077); AASM 2021',
+ perf:'Insônia → depressão: OR=2,10 (IC95% 1,86-2,38)',alertMental:true,
+ needs:['n1_depressao','n1_sono','n1_ansiedade','n1_burnout'],
+ pesos:{'n1_depressao':0.35,'n1_sono':0.30,'n1_ansiedade':0.20,'n1_burnout':0.15},min:2,
+ medSugest:['Insônia + PHQ-9 positivo: CBTI simultâneo ao tratamento da depressão.','Avaliar SAOS: apneia não tratada amplifica depressão (OR=2,1).'],
+ patSugest:['Dormir mal e sentir-se para baixo caminham juntos e se alimentam mutuamente.'],
+ ref_card:'Baglioni C et al., Sleep Med Rev 2016;30:75 (meta-análise k=21, n=172.077); AASM 2021'},
+{id:'n2_obesidade_cancer',nivel:'N2',nome:'Obesidade metabólica e risco oncológico',dominio:'Oncologia',
+ ref:'Mahamat-Saleh 2024 British J Cancer IARC (n=797.193); NCI 2024',
+ perf:'MUOW/OB: SRR=1,42 cânceres relacionados à obesidade',alertMental:false,
+ needs:['n1_hiperinsulinemia_cancer','n1_inflamacao_cronica','n1_sindrome_met_vars','n1_obesidade'],
+ pesos:{'n1_hiperinsulinemia_cancer':0.35,'n1_inflamacao_cronica':0.30,'n1_sindrome_met_vars':0.20,'n1_obesidade':0.15},min:2,
+ medSugest:['Solicitar PCR-us, insulina em jejum, IGF-1, adiponectina.','Colonoscopia precoce: IMC >30 + hist. familiar CRC + idade >45 anos.'],
+ patSugest:['A combinação de excesso de peso e metabolismo desregulado aumenta o risco de vários tipos de câncer.'],
+ ref_card:'Mahamat-Saleh Y et al., British J Cancer 2024;131(9):1480 (IARC, n=797.193); NCI 2024'},
+{id:'n2_depressao_cancer',nivel:'N2',nome:'Depressão, ansiedade e prognóstico oncológico',dominio:'Psico-oncologia',
+ ref:'van Tuijl 2023 Cancer (PSY-CA IPD); GeroScience 2025',
+ perf:'Depressão pós-diagnóstico: +23-83% mortalidade oncológica',alertMental:true,
+ needs:['n1_distress_onco','n1_depressao','n1_ansiedade','n1_qualidade_vida'],
+ pesos:{'n1_distress_onco':0.35,'n1_depressao':0.30,'n1_ansiedade':0.20,'n1_qualidade_vida':0.15},min:2,
+ medSugest:['PHQ-9≥10 ou DT≥4: encaminhar psico-oncologia urgentemente.','Preferir sertralina/escitalopram — menor interação com quimioterápicos.'],
+ patSugest:['Tratar a mente durante o tratamento do câncer não é luxo — é parte essencial.'],
+ ref_card:'van Tuijl LA et al., Cancer 2023;129(20):3287 (PSY-CA IPD); GeroScience 2025'},
+{id:'n2_psicossomatico_integrado',nivel:'N2',nome:'Saúde psicossomática integrada',dominio:'Psicossomático',
+ ref:'Lancet Psychiatry 2025; Luppino 2010 (n=55.387); BMC Public Health 2024 (n=16.366)',
+ perf:'Obesidade+depressão: AOR=3,77 para multimorbidade',alertMental:true,
+ needs:['n2_saude_mental_peso','n2_sono_mental','n1_qualidade_vida','n1_inflamacao_cronica'],
+ pesos:{'n2_saude_mental_peso':0.40,'n2_sono_mental':0.25,'n1_qualidade_vida':0.20,'n1_inflamacao_cronica':0.15},min:2,
+ medSugest:['Tratar depressão e obesidade em paralelo. Mecanismos compartilhados: IL-6/PCR, eixo HPA, disbiose intestinal.','Dieta anti-inflamatória (mediterrânea): melhora sintomas depressivos E perfil metabólico.'],
+ patSugest:['Corpo e mente se influenciam profundamente. O que acontece no metabolismo afeta o humor — e vice-versa.'],
+ ref_card:'Lancet Psychiatry 2025 (MDD + comorbid obesity); Luppino FS 2010 (n=55.387); BMC Public Health 2024 (n=16.366)'},
+{id:'n2_cancer_crc_integrado',nivel:'N2',nome:'Risco integrado de câncer colorretal',dominio:'Oncologia',
+ ref:'LiFeCRC AUC=0,77; Kurth 2007 OR=15,29; BMC Cancer 2025 C-index=0,718',
+ perf:'Lifestyle score: OR=5,82 (IC95% 4,02-8,44)',alertMental:false,
+ needs:['n1_cancer_crc','n1_hiperinsulinemia_cancer','n1_inflamacao_cronica','n2_sindrome_met'],
+ pesos:{'n1_cancer_crc':0.40,'n1_hiperinsulinemia_cancer':0.25,'n1_inflamacao_cronica':0.20,'n2_sindrome_met':0.15},min:2,
+ medSugest:['Colonoscopia precoce (<45 anos) se ≥2 fatores de risco.','FIT a cada 2 anos: Sens 79%, Spec 94% para CRC.'],
+ patSugest:['Câncer de intestino é um dos mais preveníveis. A colonoscopia detecta pólipos antes que virem câncer.'],
+ ref_card:'Ibáñez-Sanz G et al., Sci Rep 2017;7:3765 (LiFeCRC); Kurth T, Am J Med 2007;120:257 (OR=15,29); BMC Cancer 2025'},
+];
+
+const N3 = [
+{id:'n3_saude_masc_360',nivel:'N3',nome:'Perfil de saúde masculina 360°',dominio:'Meta-inferência',
+ ref:'WHO NCD Action Plan 2030; Look AHEAD NEJM 2012 (n=5.145)',
+ perf:'Redução de 34-38% no erro de estratificação vs. modelos unidimensionais',alertMental:false,
+ needs:['n2_sindrome_met','n2_saude_mental_peso','n2_risco_cardiomet','n2_elegib_completa','n2_sono_mental'],
+ pesos:{'n2_sindrome_met':0.28,'n2_saude_mental_peso':0.25,'n2_risco_cardiomet':0.22,'n2_elegib_completa':0.15,'n2_sono_mental':0.10},min:2,
+ medSugest:['Schema abrangente: plano de cuidado integrado viável.','Priorização: (1) contraindicações GLP-1, (2) risco CV imediato, (3) saúde mental, (4) sono.','Monitoramento trimestral: HbA1c + PHQ-9 + ISI + lipídios + PA + peso.'],
+ patSugest:['Com todas essas informações, seu médico tem uma visão muito completa da sua saúde para criar um plano personalizado.'],
+ ref_card:'WHO NCD Action Plan 2013-2030; Look AHEAD Research Group, NEJM 2012;369(2):145'},
+{id:'n3_risco_oncologico_integrado',nivel:'N3',nome:'Risco oncológico integrado',dominio:'Oncologia / Meta-inferência',
+ ref:'IARC World Cancer Report 2020; NCI 2024; GeroScience 2025',
+ perf:'C-index multimodal=0,718; depressão: +23-83% mortalidade oncológica',alertMental:false,
+ needs:['n2_obesidade_cancer','n2_cancer_crc_integrado','n1_prostata','n1_hiperinsulinemia_cancer','n2_depressao_cancer'],
+ pesos:{'n2_obesidade_cancer':0.30,'n2_cancer_crc_integrado':0.28,'n1_prostata':0.20,'n1_hiperinsulinemia_cancer':0.14,'n2_depressao_cancer':0.08},min:2,
+ medSugest:['Rastreamento: (1) FIT/colonoscopia >45a + fatores CRC; (2) PSA >50a ou hist. familiar; (3) marcadores metabólicos oncológicos.','GLP-1: redução de risco em 10/13 cânceres relacionados à obesidade (T2DM, n=1,6 mi).'],
+ patSugest:['O seu perfil metabólico coloca você num grupo que se beneficia muito do rastreamento preventivo de câncer.'],
+ ref_card:'IARC World Cancer Report 2020; NCI Obesity & Cancer 2024; Mahamat-Saleh Y et al., British J Cancer 2024;131:1480'},
+{id:'n3_carga_doenca_mental_metabolica',nivel:'N3',nome:'Carga de doença mental-metabólica integrada',dominio:'Psicossomático / Meta-inferência',
+ ref:'GBD 2019; Lancet Psychiatry 2025; BMC Public Health 2024 (n=16.366)',
+ perf:'AOR=3,77 multimorbidade; GBD: depressão+DM2=8,5% dos DALYs globais',alertMental:true,
+ needs:['n2_psicossomatico_integrado','n2_sindrome_met','n2_sono_mental','n1_qualidade_vida','n2_elegib_completa'],
+ pesos:{'n2_psicossomatico_integrado':0.32,'n2_sindrome_met':0.25,'n2_sono_mental':0.18,'n1_qualidade_vida':0.15,'n2_elegib_completa':0.10},min:3,
+ medSugest:['Sequência: (1) estabilizar sono (CBTI+SAOS) → (2) tratar depressão → (3) otimizar metabolismo → (4) GLP-1.','Equipe: endocrinologista + psiquiatra + nutricionista + educador físico em protocolo conjunto.'],
+ patSugest:['A combinação de desafios que você enfrenta é real e documentada. Melhorar em uma frente facilita as outras.'],
+ ref_card:'Lancet Psychiatry 2025 (MDD + obesity management); GBD 2019; BMC Public Health 2024;24:402 (n=16.366)'},
+{id:'n3_viabilidade_terapeutica_global',nivel:'N3',nome:'Viabilidade terapêutica e plano global',dominio:'Clínica Integrativa / Meta-inferência',
+ ref:'Look AHEAD NEJM 2012 (n=5.145); STEP 1 2021; NCCN 2024',
+ perf:'Look AHEAD: melhora simultânea HbA1c, PA, QV, depressão (n=5.145, 8 anos)',alertMental:false,
+ needs:['n3_saude_masc_360','n3_carga_doenca_mental_metabolica','n2_elegib_completa','n2_risco_cardiomet','n3_risco_oncologico_integrado'],
+ pesos:{'n3_saude_masc_360':0.30,'n3_carga_doenca_mental_metabolica':0.28,'n2_elegib_completa':0.18,'n2_risco_cardiomet':0.15,'n3_risco_oncologico_integrado':0.09},min:2,
+ medSugest:['SCHEMA COMPLETO. Priorização: (1) URGENTE: contraindicações GLP-1, rastreamentos atrasados; (2) 30 dias: iniciar farmacoterapia, encaminhar SM; (3) 3 meses: sono, exercício, nutrição; (4) manutenção trimestral.'],
+ patSugest:['Você reuniu um conjunto de informações muito valioso. Isso coloca você e seu médico em posição de construir um plano realmente personalizado.'],
+ ref_card:'Look AHEAD NEJM 2012;369:145 (n=5.145); Davies NEJM 2021;384:989 (STEP 1); NCCN v2.2024'},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// ENGINE — agora com alpha por estado
+// ══════════════════════════════════════════════════════════════════
+const N1_IDX = Object.fromEntries(N1.map(m=>[m.id,m]));
+const N2_IDX = Object.fromEntries(N2.map(m=>[m.id,m]));
+const N3_IDX = Object.fromEntries(N3.map(m=>[m.id,m]));
+const ALL_IDX = Object.fromEntries([...N1,...N2,...N3].map(m=>[m.id,m]));
+
+// Retorna alpha do estado atual de um dado (0 se não informado)
+function getAlpha(id){
+  const e = estadoAtual.get(id);
+  return e ? e.alpha : 0;
+}
+
+// Cobertura ponderada por alpha
+function calcCov(vars){
+  const tot = vars.reduce((s,v)=>s+v.p, 0);
+  const got = vars.reduce((s,v)=>s + v.p * getAlpha(v.id), 0);
+  return tot > 0 ? got/tot : 0;
+}
+
+function getCov(id, c1, c2, c3){
+  if(c1[id]!==undefined) return c1[id];
+  if(c2[id]!==undefined) return c2[id];
+  if(c3[id]!==undefined) return c3[id];
+  return 0;
+}
+function calcModelCov(m, c1, c2, c3){
+  const ativos = m.needs.filter(id=>getCov(id,c1,c2,c3)>=0.05);
+  if(ativos.length<m.min) return 0;
+  const tw = ativos.reduce((s,id)=>s+m.pesos[id],0);
+  if(tw===0) return 0;
+  return ativos.reduce((s,id)=>s+m.pesos[id]*getCov(id,c1,c2,c3),0)/tw;
+}
+function runEngine(){
+  const c1={};
+  N1.forEach(m=>{ c1[m.id]=calcCov(m.vars); });
+  const c2={};
+  N2.forEach(m=>{c2[m.id]=0;});
+  for(let i=0;i<3;i++) N2.forEach(m=>{c2[m.id]=calcModelCov(m,c1,c2,{});});
+  const c3={};
+  N3.forEach(m=>{c3[m.id]=0;});
+  for(let i=0;i<3;i++) N3.forEach(m=>{c3[m.id]=calcModelCov(m,c1,c2,c3);});
+  return {c1,c2,c3};
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI — buildUI com estados
+// ══════════════════════════════════════════════════════════════════
+function buildUI(){
+  const list = document.getElementById('cat-list');
+  CATS.forEach(cat=>{
+    const itens = DADOS.filter(d=>d.cat===cat.id);
+    if(!itens.length) return;
+    const block = document.createElement('div');
+    block.className='cat-block';
+
+    const itemsHtml = itens.map(d=>{
+      const domCls = `est-${d.dom||'metabol'}`;
+      const estadosHtml = d.estados.map((e,i)=>`
+        <span class="est ${e.risco?'est-r '+domCls:'est-n'}" 
+              id="est-${d.id}-${i}"
+              onclick="selecionarEstado('${d.id}',${i},${e.alpha},${e.risco})"
+              title="${e.risco?'⚠ Faixa de risco — contribui 100% do peso':'Normal — contribui 30% do peso'}">${e.label}</span>`).join('');
+      return `<div class="dato-wrap">
+        <div class="dato-name">${d.nome}</div>
+        <div class="dato-desc">${d.desc}</div>
+        <div class="estado-group">${estadosHtml}</div>
+      </div>`;
+    }).join('');
+
+    block.innerHTML=`
+      <div class="cat-head" onclick="toggleCat(this)">
+        <div class="cat-label">
+          <div class="cat-icon" style="background:${cat.color}">${cat.icon}</div>
+          ${cat.label}
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <span class="cat-count" id="cnt-${cat.id}">0/${itens.length}</span>
+          <span class="cat-arrow">▶</span>
+        </div>
+      </div>
+      <div class="cat-items">${itemsHtml}</div>`;
+    list.appendChild(block);
+  });
+}
+
+function toggleCat(head){ head.closest('.cat-block').classList.toggle('open'); }
+
+function selecionarEstado(dadoId, estIdx, alpha, risco){
+  const d = DADOS_IDX[dadoId];
+  if(!d) return;
+
+  // Se clicar no mesmo estado já selecionado, desseleciona
+  const atual = estadoAtual.get(dadoId);
+  if(atual && atual.idx === estIdx){
+    estadoAtual.delete(dadoId);
+    d.estados.forEach((_,i)=>{ document.getElementById(`est-${dadoId}-${i}`)?.classList.remove('sel'); });
+    updateCount();
+    return;
+  }
+
+  // Selecionar novo estado
+  estadoAtual.set(dadoId, {idx: estIdx, alpha, risco});
+  d.estados.forEach((_,i)=>{
+    const el = document.getElementById(`est-${dadoId}-${i}`);
+    if(el) el.classList.toggle('sel', i===estIdx);
+  });
+  updateCount();
+}
+
+function updateCount(){
+  const total = estadoAtual.size;
+  const risco = [...estadoAtual.values()].filter(e=>e.risco).length;
+  document.getElementById('sel-n').textContent = total;
+  const rEl = document.getElementById('sel-risk-count');
+  if(risco > 0){
+    rEl.textContent = risco+' em faixa de risco';
+    rEl.style.display = 'block';
+  } else {
+    rEl.style.display = 'none';
+  }
+  document.getElementById('btn-calc').disabled = total === 0;
+  CATS.forEach(cat=>{
+    const itens = DADOS.filter(d=>d.cat===cat.id);
+    const sel = itens.filter(d=>estadoAtual.has(d.id)).length;
+    const el = document.getElementById('cnt-'+cat.id);
+    if(el) el.textContent = sel+'/'+itens.length;
+  });
+}
+
+function clearAll(){
+  estadoAtual.clear();
+  document.querySelectorAll('.est').forEach(el=>el.classList.remove('sel'));
+  updateCount();
+  document.getElementById('empty-state').style.display='block';
+  document.getElementById('results-panel').style.display='none';
+}
+
+function presetSaude(){
+  // Preset com valores de risco típicos para uma consulta
+  const preset = [
+    ['imc',2],['cintura',1],['glicemia',1],['hba1c',1],['colesterol',1],
+    ['triglicerides',2],['hdl',2],['pressao',2],['tabagismo',3],
+    ['medic_antihiper',1],['diabetes',1],['hist_glicemia',1],
+    ['hist_familiar_dm',2],['atv_fisica',2],['idade',2],
+    ['phq2',1],['sono_horas',1],['apneia',1],
+    ['psa',2],['hist_familiar_prostata',0],
+    ['hist_familiar_crc',0],['pcr_alta',2],['insulina',2],
+  ];
+  clearAll();
+  preset.forEach(([id,idx])=>{
+    const d = DADOS_IDX[id];
+    if(!d || idx >= d.estados.length) return;
+    const e = d.estados[idx];
+    selecionarEstado(id, idx, e.alpha, e.risco);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════
+function covColor(p){ return p>=75?'#15803d':p>=45?'#92400e':'#be123c'; }
+function riskBadge(p){
+  if(p>=75) return {cls:'rb-low',txt:'● Alta prioridade'};
+  if(p>=45) return {cls:'rb-mod',txt:'● Média prioridade'};
+  return {cls:'rb-high',txt:'● Baixa prioridade'};
+}
+function lvlBadge(n){ return n==='N1'?'pill-n1':n==='N2'?'pill-n2':'pill-n3'; }
+function lvlCls(id){ return N1_IDX[id]?'chain-n1':N2_IDX[id]?'chain-n2':'chain-n3'; }
+
+function renderCard(m, pct, covs){
+  if(pct<5) return '';
+  const col=covColor(pct);
+  const rb=riskBadge(pct);
+  const mental=m.alertMental?'<span class="rm-pill pill-ment" style="margin-left:.4rem">🧠 saúde mental</span>':'';
+
+  // Mostrar distribuição alpha para N1
+  let alphaHtml='';
+  if(m.vars){
+    const risco=m.vars.filter(v=>{ const a=getAlpha(v.id); return a>=1.0; });
+    const normal=m.vars.filter(v=>{ const a=getAlpha(v.id); return a>0&&a<1.0; });
+    const miss=m.vars.filter(v=>getAlpha(v.id)===0);
+    if(risco.length||normal.length){
+      const tags=[
+        risco.length?`<span class="alpha-tag atag-risk">⚠ ${risco.length} em risco: ${risco.map(v=>DADOS_IDX[v.id]?.nome||v.id).join(', ')}</span>`:'',
+        normal.length?`<span class="alpha-tag atag-norm">${normal.length} normal: ${normal.map(v=>DADOS_IDX[v.id]?.nome||v.id).join(', ')}</span>`:'',
+        miss.length?`<span class="alpha-tag atag-miss">${miss.length} não informado</span>`:'',
+      ].filter(Boolean).join('');
+      alphaHtml=`<div class="alpha-bar">${tags}</div>`;
+    }
+  }
+
+  // Entradas compostas para N2/N3
+  let faltandoHtml='';
+  if(m.vars&&m.vars.length){
+    const f=m.vars.filter(v=>getAlpha(v.id)===0).sort((a,b)=>b.p-a.p).slice(0,4);
+    if(f.length) faltandoHtml=`<div class="missing-block"><div class="mb-label">Dados não informados:</div><div class="missing-tags">${f.map(v=>`<span class="mtag">${DADOS_IDX[v.id]?.nome||v.id} (peso ${v.p}%)</span>`).join('')}</div></div>`;
+  } else if(m.needs&&covs){
+    const rows=m.needs.map(id=>{
+      const mo=ALL_IDX[id];
+      const c=Math.round(((covs.c1||{})[id]||(covs.c2||{})[id]||(covs.c3||{})[id]||0)*100);
+      const co=c>=75?'#15803d':c>=45?'#92400e':c>0?'#be123c':'#aaa';
+      return `<span class="mtag" style="background:#f8f8f6;border-color:#e0dbd2;color:${co}">${mo?.nome||id} <strong>${c}%</strong></span>`;
+    }).join('');
+    faltandoHtml=`<div class="missing-block"><div class="mb-label">Entradas desta composição:</div><div class="missing-tags">${rows}</div></div>`;
+  }
+
+  // Chain bar
+  let chainHtml='';
+  if(m.needs){
+    const nodes=m.needs.map(id=>`<span class="chain-node ${lvlCls(id)}">${ALL_IDX[id]?.nome||id}</span>`).join('<span class="chain-arr">→</span>');
+    const outCls=m.nivel==='N3'?'chain-n3':'chain-n2';
+    chainHtml=`<div class="chain-bar"><span style="font-size:10px;margin-right:.4rem">Composição:</span>${nodes}<span class="chain-arr">→</span><span class="chain-node ${outCls}">${m.nome}</span></div>`;
+  }
+
+  const med=(m.medSugest||[]).map(r=>`<div class="sug-item"><div class="sug-dot"></div><div>${r}</div></div>`).join('');
+  const pat=(m.patSugest||[]).map(r=>`<div class="sug-item"><div class="sug-dot"></div><div>${r}</div></div>`).join('');
+
+  return `<div class="card">
+    <div class="card-head">
+      <div class="ch-level"><span class="rm-pill ${lvlBadge(m.nivel)}">${m.nivel}</span> <span style="font-size:10px;color:var(--muted);margin-left:.3rem">${m.dominio}</span>${mental}</div>
+      <div class="ch-title">${m.nome}</div>
+      <div class="ch-ref">${m.ref}</div>
+    </div>
+    <div class="cov-row">
+      <div class="cov-track">
+        <div class="cov-fill-risk" style="width:${pct}%;background:${col}"></div>
+      </div>
+      <div class="cov-pct" style="color:${col}">${pct}%</div>
+      <span class="risk-badge ${rb.cls}">${rb.txt}</span>
+    </div>
+    ${alphaHtml}
+    ${faltandoHtml}
+    ${chainHtml}
+    <div class="sugest-wrap">
+      <div class="sug-panel sug-med"><div class="sug-label">Para o médico</div>${med}<div class="sug-ref">Fontes: ${m.ref_card||m.ref}</div></div>
+      <div class="sug-panel sug-pac"><div class="sug-label">Para o paciente</div>${pat}</div>
+    </div>
+  </div>`;
+}
+
+function calcular(){
+  const {c1,c2,c3}=runEngine();
+  // N1→N2→N3 (ordem crescente de complexidade)
+  const a1=N1.filter(m=>Math.round(c1[m.id]*100)>=5).sort((a,b)=>c1[b.id]-c1[a.id]);
+  const a2=N2.filter(m=>Math.round(c2[m.id]*100)>=5).sort((a,b)=>c2[b.id]-c2[a.id]);
+  const a3=N3.filter(m=>Math.round(c3[m.id]*100)>=5).sort((a,b)=>c3[b.id]-c3[a.id]);
+  const covs={c1,c2,c3};
+
+  const totalInformados=estadoAtual.size;
+  const emRisco=[...estadoAtual.values()].filter(e=>e.risco).length;
+
+  let html=`<div class="disclaimer"><strong>⚠ Instrumento de triagem:</strong> Prioridade indica o grau de fundamentação clínica de cada inferência — não é diagnóstico nem probabilidade de doença. Resultados devem ser interpretados por profissional de saúde habilitado. CFM Res. 2.314/2022 e LGPD (Lei 13.709/2018).</div>
+  <div class="results-meta">
+    <div>
+      <div class="rm-title">Inferências calculadas</div>
+      <div class="rm-sub">${totalInformados} dados informados · ${emRisco} em faixa de risco → ${a1.length+a2.length+a3.length} inferências ativas</div>
+    </div>
+    <div class="rm-pills">
+      <span class="rm-pill pill-n1">${a1.length} N1</span>
+      <span class="rm-pill pill-n2">${a2.length} N2</span>
+      <span class="rm-pill pill-n3">${a3.length} N3</span>
+    </div>
+  </div>`;
+
+  if(a1.length){ html+=`<div class="sec-label" style="background:var(--blue-l);color:var(--blue-d)">Inferências primárias</div>`; a1.forEach(m=>{ html+=renderCard(m,Math.round(c1[m.id]*100),covs); }); }
+  if(a2.length){ html+=`<div class="sec-label" style="background:var(--purple-l);color:var(--purple)">Inferências compostas</div>`; a2.forEach(m=>{ html+=renderCard(m,Math.round(c2[m.id]*100),covs); }); }
+  if(a3.length){ html+=`<div class="sec-label" style="background:var(--orange-l);color:var(--orange)">Síntese clínica integrada</div>`; a3.forEach(m=>{ html+=renderCard(m,Math.round(c3[m.id]*100),covs); }); }
+
+  if(!a1.length&&!a2.length&&!a3.length) html+=`<div class="empty-state"><div class="es-icon">🔍</div><h3>Nenhuma inferência ativa</h3><p>Selecione dados em faixa de risco ou normal para ativar os modelos.</p></div>`;
+
+  document.getElementById('empty-state').style.display='none';
+  const panel=document.getElementById('results-panel');
+  panel.innerHTML=html;
+  panel.style.display='block';
+  document.getElementById('results-anchor').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+buildUI();
+</script>
+<script src="shared.js" defer></script>
+</body>
+</html>
