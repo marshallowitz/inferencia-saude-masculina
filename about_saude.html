@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Engine de Saúde Masculina</title>
+<meta name="description" content="Sofia Marshallowitz — pesquisadora, consultora independente e criadora do Engine de Inferência em Saúde Masculina.">
+<meta property="og:title" content="About — Sofia Marshallowitz">
+<meta property="og:description" content="Pesquisadora e criadora do Engine de Inferência em Saúde Masculina. Mestre em Ciência da Computação, MBA em Segurança de Dados.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+:root{--ink:#0f0e0c;--paper:#f8f6f0;--rule:#d8d4c8;--accent:#1d4ed8;--muted:#8a8680}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.7}
+.about-wrap{max-width:760px;margin:0 auto;padding:5rem 2rem 6rem}
+.about-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem}
+.about-eyebrow::before{content:'';display:block;width:28px;height:2px;background:var(--accent)}
+.about-name{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(30px,5vw,50px);line-height:1.05;letter-spacing:-.03em;margin-bottom:2rem;color:var(--ink)}
+.about-grid{display:grid;grid-template-columns:200px 1fr;gap:3rem;align-items:start;margin-bottom:3rem}
+@media(max-width:640px){.about-grid{grid-template-columns:1fr}}
+.about-photo{width:200px;height:200px;border-radius:4px;background:#e8e4dc;border:2px solid var(--rule);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.about-photo img{width:100%;height:100%;object-fit:cover}
+.about-photo-placeholder{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.6;padding:1rem}
+.about-bio p{font-size:16px;line-height:1.85;color:#333;margin-bottom:1.2rem}
+.about-bio p:last-child{margin-bottom:0}
+.about-bio strong{font-weight:600;color:var(--ink)}
+.about-sep{border:none;border-top:1px solid var(--rule);margin:3rem 0}
+.about-links{display:flex;gap:1rem;flex-wrap:wrap}
+.about-link{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink);border:2px solid var(--ink);padding:.5rem 1.2rem;border-radius:3px;transition:all .15s}
+.about-link:hover{background:var(--ink);color:var(--paper)}
+.about-link.primary{background:var(--ink);color:var(--paper)}
+.about-link.primary:hover{opacity:.85}
+.about-engine{background:#fff;border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:4px;padding:1.5rem 2rem;margin-top:3rem}
+.about-engine h3{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem}
+.about-engine p{font-size:14px;color:#555;line-height:1.75;margin-bottom:.7rem}
+.about-engine p:last-child{margin-bottom:0}
+.about-artefacts{margin-top:2rem;background:#fff;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.aa-head{background:#0f0e0c;padding:.8rem 1.2rem;display:flex;align-items:center;gap:.8rem}
+.aa-head-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8f6f0}
+.aa-item{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.2rem;border-bottom:1px solid var(--rule);gap:1rem}
+.aa-item:last-child{border-bottom:none}
+.aa-info{flex:1}
+.aa-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--ink);margin-bottom:.15rem}
+.aa-desc{font-size:12px;color:var(--muted)}
+.aa-link{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--accent);white-space:nowrap;flex-shrink:0}
+.aa-link:hover{text-decoration:underline}
+footer{background:var(--ink);padding:2.5rem 2rem}
+.footer-in{max-width:1140px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#f8f6f0}
+.footer-logo em{color:#93c5fd;font-style:normal}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#666;text-decoration:none}
+.footer-links a:hover{color:#aaa}
+.footer-copy{font-size:11px;color:#444;font-family:'Syne',sans-serif;letter-spacing:.03em;width:100%;margin-top:.5rem}
+</style>
+</head>
+<body>
+
+<div id="read-progress"></div>
+
+<div class="about-wrap">
+
+  <div class="about-eyebrow">Sobre a autora</div>
+  <h1 class="about-name">Sofia<br>Marshallowitz</h1>
+
+  <div class="about-grid">
+    <div class="about-photo">
+  <img src="me1.jpg" alt="Sofia Marshallowitz">
+    </div>
+    <div class="about-bio">
+      <!-- ✏️ EDITE OS PARÁGRAFOS ABAIXO com sua bio -->
+      <p>
+        <strong>Hello, Human!</strong> Sua Sofia Marshallowitz, Mestre em Ciência da Computação pela Universidade Federal do Rio Grande do Sul, MBA em Segurança de Dados pela USP e Bacharel em Direito pelo Mackenzie.
+      </p>
+      <p>
+        Eu nunca quis caber em uma área só. Não por indecisão, mas porque as perguntas que me interessam não cabem em uma única disciplina. Foi assim que eu fui parar entre computação, regulação e comportamento. Não como caminhos separados, mas como partes de um mesmo problema: como decisões são tomadas, e por quem.
+      </p>
+      <p>
+        Atualmente sou pesquisadora e consultora independente, professora de pós-graduação em ciência de dados na PUC Campinas e IBMEC e mãe de pet, a Hedwig.
+      </p>
+    </div>
+  </div>
+
+  <div class="about-links">
+    <a href="https://www.linkedin.com/in/marshallowitz/" class="about-link primary" target="_blank">LinkedIn →</a>
+    <a href="https://papers.ssrn.com/abstract=6543718" class="about-link" target="_blank">Pre-print Paper</a>
+    <a href="mailto:sofia@marshallowitz.com.br" class="about-link">Contato</a>
+  </div>
+
+  <hr class="about-sep">
+
+  <div class="about-engine">
+    <h3>Sobre este engine</h3>
+    <p>O Engine de Mapeamento de Inferência Estatística — Saúde Masculina nasceu de uma pergunta prática: quando temos um conjunto parcial de dados clínicos, o que podemos inferir honestamente, e como comunicar isso sem fabricar pseudo-confiança?</p>
+    <p>A resposta levou à formulação de <strong>cobertura ponderada por estado clínico</strong> (<em>α-weighted model coverage</em>), uma métrica formalmente definida onde cada variável contribui proporcionalmente à severidade clínica do seu resultado, com pesos derivados dos pontos de corte dos estudos de validação originais.</p>
+    <p>Nessa versão inicial, o engine implementa 16 modelos N1 (instrumentos clínicos validados individuais), 9 modelos N2 (padrões compostos) e 4 modelos N3 (meta-inferências para planejamento terapêutico integrado), com mais de 250 estados clínicos discretizados e 50+ referências científicas documentadas. O engine está descrito em detalhe na <a href="docs_saude_v3.html" style="color:var(--accent)">documentação de referência</a>.</p>
+  </div>
+
+  <div class="about-artefacts">
+    <div class="aa-head">
+      <span class="aa-head-title">Artefatos do projeto</span>
+    </div>
+    <div class="aa-item">
+      <div class="aa-info">
+        <div class="aa-name">Engine de Saúde Masculina v3</div>
+        <div class="aa-desc">Calculadora interativa com estados clínicos discretizados · 16 N1 · 9 N2 · 4 N3 · painel médico/paciente</div>
+      </div>
+      <a href="saude_engine_v3.html" class="aa-link">Abrir →</a>
+    </div>
+    <div class="aa-item">
+      <div class="aa-info">
+        <div class="aa-name">Grafo de inferência interativo</div>
+        <div class="aa-desc">SVG puro · 4 colunas · 29 nós · 80+ conexões · filtros por domínio · click para destacar cadeia</div>
+      </div>
+      <a href="grafo_saude_v2.html" class="aa-link">Abrir →</a>
+    </div>
+    <div class="aa-item">
+      <div class="aa-info">
+        <div class="aa-name">Documentação de referência</div>
+        <div class="aa-desc">Todos os modelos, variáveis, estados clínicos, faixas de α e 50+ referências bibliográficas completas</div>
+      </div>
+      <a href="docs_saude_v3.html" class="aa-link">Abrir →</a>
+    </div>
+    <div class="aa-item">
+      <div class="aa-info">
+        <div class="aa-name">Landing page — pitch comercial</div>
+        <div class="aa-desc">Apresentação do engine para startups de saúde masculina · exemplo prático ao vivo</div>
+      </div>
+      <a href="index.html" class="aa-link">Abrir →</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-in">
+    <div class="footer-logo">Inferência em <em>saúde masculina</em></div>
+    <div class="footer-links">
+      <a href="index.html">Início</a>
+      <a href="saude_engine_v3.html">Engine v1</a>
+      <a href="grafo_saude_v2.html">Grafo</a>
+      <a href="docs_saude_v3.html">Documentação</a>
+      <a href="about_saude.html">About</a>
+    </div>
+    <div class="footer-copy">Sofia Marshallowitz · Independent Researcher · Abril 2026 · Instrumento de triagem clínica, não substitui avaliação médica profissional</div>
+  </div>
+</footer>
+
+<script src="shared.js" defer></script>
+</body>
+</html>
